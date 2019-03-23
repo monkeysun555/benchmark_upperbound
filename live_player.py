@@ -2,6 +2,7 @@ import numpy as np
 
 RANDOM_SEED = 13
 BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
+BITRATE = [300.0, 6000.0]
 # BITRATE = [500.0, 2000.0, 5000.0, 8000.0, 16000.0]	# 5 actions
 PACKET_PAYLOAD_PORTION = 0.973	# 1460/1500
 
@@ -25,54 +26,59 @@ KB_IN_MB = 1000.0	# in ms
 class Live_Player(object):
 	def __init__(self, time_trace, throughput_trace, seg_duration, chunk_duration, start_up_th, freezing_tol, latency_tol, randomSeed = RANDOM_SEED):
 		np.random.seed(randomSeed)
+		self.seg_duration = seg_duration
+		# self.frag_duration = frag_duration
+		self.chunk_duration = chunk_duration
+		self.start_up_th = start_up_th
+		self.freezing_tol = freezing_tol
+		self.latency_tol = latency_tol
 
-		# self.time_traces = time_traces
-		# self.throughput_traces = throughput_traces
-
-		# self.trace_idx = np.random.randint(len(self.throughput_traces))
 		self.throughput_trace = throughput_trace
 		self.time_trace = time_trace
 
 		self.playing_time = 0.0
-		self.time_idx = np.random.randint(1,len(self.time_trace))
-		self.last_trace_time = self.time_trace[self.time_idx-1] * MS_IN_S	# in ms
-
-		self.seg_duration = seg_duration
-		# self.frag_duration = frag_duration
-		self.chunk_duration = chunk_duration
-
-		# self.frag_in_seg = seg_duration/frag_duration
-		# self.chunk_in_frag = frag_duration/chunk_duration
-		# self.chunk_in_seg = seg_duration/chunk_duration
-
-		self.buffer = 0.0	# ms
-		self.state = 0	# 0: start up.  1: traceing. 2: rebuffering
-		self.start_up_th = start_up_th
-		self.freezing_tol = freezing_tol
-		self.latency_tol = latency_tol
+		self.time_idx = 1
+		self.last_trace_time = 0.0
+		self.buffer = 0.0
+		self.state = 0
+		
 		print('player initial finish')
 
-	def fetch(self, quality, next_chunk_set, seg_idx, chunk_idx, take_action, num_chunk, playing_speed = 1.0):
+	def clone_from_state(self, real_timing, buffer_length, state, playing_time):
+		self.playing_time = playing_time 	# Due to quantize, there might be small error
+		print "In get state, playing time: ", self.playing_time
+		self.time_idx = int(np.floor(real_timing/MS_IN_S)) + 1
+		self.last_trace_time = real_timing
+		self.buffer = buffer_length
+		self.state = state
+		print "In get state, buffer length ", self.buffer
+		print "In get state, state is ", self.state
+		print "In get state, real time is: ", real_timing
+
+	def fetch(self, next_chunk_set, seg_idx, chunk_idx, take_action, num_chunk, playing_speed = 1.0):
 		# Action initialization
+		print "start fetching, seg idx is:", seg_idx
 		start_state = self.state
-		chunk_size = next_chunk_set[quality] # in Kbits not KBytes
+		chunk_size = next_chunk_set # in Kbits not KBytes
 		chunk_start_time = seg_idx * self.seg_duration + chunk_idx * self.chunk_duration
 		# as mpd is based on prediction, there is noise
-		chunk_size = np.random.uniform(CHUNK_RANDOM_RATIO_LOW*chunk_size, CHUNK_RANDOM_RATIO_HIGH*chunk_size)
+		# chunk_size = np.random.uniform(CHUNK_RANDOM_RATIO_LOW*chunk_size, CHUNK_RANDOM_RATIO_HIGH*chunk_size)
 		chunk_sent = 0.0	# in Kbits
 		downloading_fraction = 0.0	# in ms
 		freezing_fraction = 0.0	# in ms
 		time_out = 0
-		rtt = 0.0
+		# rtt = 0.0
 		# Handle RTT 
 		if take_action:
-			rtt = np.random.uniform(RTT_LOW, RTT_HIGH) 	# in ms
+			# rtt = np.random.uniform(RTT_LOW, RTT_HIGH) 	# in ms
+			rtt = RTT_LOW	# For upper bound calculation
 			duration = self.time_trace[self.time_idx] * MS_IN_S - self.last_trace_time	# in ms
 			if duration > rtt:
 				self.last_trace_time += rtt
 			else:
 				temp_rtt = rtt - duration
 				self.time_idx += 1
+				self.last_trace_time += duration
 				if self.time_idx >= len(self.time_trace):
 					self.time_idx = 1
 					self.last_trace_time = 0.0
@@ -167,7 +173,7 @@ class Live_Player(object):
 						# And resync, enter initial phase
 						buffer_end_time = chunk_start_time + self.chunk_duration * num_chunk
 						self.playing_time = buffer_end_time - self.buffer
-						# print(buffer_end_time, self.buffer)
+						print buffer_end_time, self.buffer, " This is playing time"
 						self.state = 1
 					break
 
@@ -338,4 +344,17 @@ class Live_Player(object):
 		self.buffer = 0.0	# ms
 		self.state = 0	# 0: start up.  1: playing. 2: rebuffering
 		self.start_up_th = start_up_th
+
+	def get_playing_time(self):
+		return self.playing_time
+
+	def get_real_time(self):
+		return self.last_trace_time
+
+	def get_buffer_length(self):
+		return self.buffer
+
+	def get_state(self):
+		return self.state
+
 
