@@ -46,18 +46,18 @@ class Live_Player(object):
 
 	def clone_from_state(self, real_timing, buffer_length, state, playing_time):
 		self.playing_time = playing_time 	# Due to quantize, there might be small error
-		print "In get state, playing time: ", self.playing_time
+		# print "In get state, playing time: ", self.playing_time
 		self.time_idx = int(np.floor(real_timing/MS_IN_S)) + 1
 		self.last_trace_time = real_timing
 		self.buffer = buffer_length
 		self.state = state
-		print "In get state, buffer length ", self.buffer
-		print "In get state, state is ", self.state
-		print "In get state, real time is: ", real_timing
+		# print "In get state, buffer length ", self.buffer
+		# print "In get state, state is ", self.state
+		# print "In get state, real time is: ", real_timing
 
 	def fetch(self, next_chunk_set, seg_idx, chunk_idx, take_action, num_chunk, playing_speed = 1.0):
 		# Action initialization
-		print "start fetching, seg idx is:", seg_idx
+		# print "start fetching, seg idx is:", seg_idx
 		start_state = self.state
 		chunk_size = next_chunk_set # in Kbits not KBytes
 		chunk_start_time = seg_idx * self.seg_duration + chunk_idx * self.chunk_duration
@@ -173,7 +173,7 @@ class Live_Player(object):
 						# And resync, enter initial phase
 						buffer_end_time = chunk_start_time + self.chunk_duration * num_chunk
 						self.playing_time = buffer_end_time - self.buffer
-						print buffer_end_time, self.buffer, " This is playing time"
+						# print buffer_end_time, self.buffer, " This is playing time"
 						self.state = 1
 					break
 
@@ -356,5 +356,11 @@ class Live_Player(object):
 
 	def get_state(self):
 		return self.state
+
+	def get_time_idx(self):
+		return self.time_idx
+
+	def get_throughput_trace(self):
+		return self.throughput_trace
 
 

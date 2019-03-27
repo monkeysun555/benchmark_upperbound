@@ -43,11 +43,11 @@ MISSING_PENALTY = 2.0			# not included
 # NORMAL_PLAYING = 1.0	# For 0
 # SLOW_PLAYING = 0.9		# For -1
 
-TEST_DURATION = 20				# Number of testing <===================== Change length here
+TEST_DURATION = 100				# Number of testing <===================== Change length here
 TIMING_MAX = TEST_DURATION*SEG_DURATION/MS_IN_S + 10.0
-TIMING_BIN = 0.1
+TIMING_BIN = 0.05
 BUFFER_MAX = USER_LATENCY_TOL/MS_IN_S
-BUFFER_BIN = 0.1
+BUFFER_BIN = 0.05
 
 RATIO_LOW_2 = 2.0				# This is the lowest ratio between first chunk and the sum of all others
 RATIO_HIGH_2 = 10.0			# This is the highest ratio between first chunk and the sum of all others
@@ -82,7 +82,7 @@ def main():
 										start_up_th=SERVER_START_UP_TH, randomSeed=RANDOM_SEED)
 
 	initial_delay = server.get_time() - player.get_playing_time()	# This initial delay, cannot be reduced, all latency is calculated based on this
-	print "Initial delay is: ", initial_delay
+	# print "Initial delay is: ", initial_delay
 	# action_num = DEFAULT_ACTION
 	# last_bit_rate = action_num
 	# bit_rate = action_num
@@ -100,6 +100,7 @@ def main():
 
 	for seg_idx in range(TEST_DURATION):
 		# Here generate several values shared by same 
+		print "Current seg_idx is: ", seg_idx
 		if CHUNK_IN_SEG == 5:
 			ratio = np.random.uniform(RATIO_LOW_5, RATIO_HIGH_5)
 		else:
@@ -113,9 +114,9 @@ def main():
 			server_timing = timing + initial_delay	# This is the server's time
 
 			element = r_table_pre[value[0]][value[1]][value[2]]
-			print "<<<<<<<<<<||||||||||||||>>>>>>>>>>>>"
-			print "Server time is (before shift): ", server_timing, timing
-			print value, element
+			# print "<<<<<<<<<<||||||||||||||>>>>>>>>>>>>"
+			# print "Server time is (before shift): ", server_timing, timing
+			# print value, element
 			for bit_rate in range(len(BITRATE)):
 				action_reward = element[0]
 				seq = element[1]
@@ -131,7 +132,7 @@ def main():
 				missing_count = 0.0
 				while True:
 					download_chunk_info = server.get_next_delivery()
-					print "chunk info is " + str(download_chunk_info)
+					# print "chunk info is " + str(download_chunk_info)
 					download_seg_idx = download_chunk_info[0]
 					download_chunk_idx = download_chunk_info[1]
 					download_chunk_end_idx = download_chunk_info[2]
@@ -143,7 +144,7 @@ def main():
 					real_chunk_size, download_duration, freezing, time_out, player_state = player.fetch(download_chunk_size, 
 																			download_seg_idx, download_chunk_idx, take_action, chunk_number)
 					take_action = 0
-					print "return info ", real_chunk_size, download_duration, freezing, time_out, player_state
+					# print "return info ", real_chunk_size, download_duration, freezing, time_out, player_state
 					# past_time = download_duration
 					temp_buffer_length = player.get_buffer_length()
 
@@ -168,11 +169,14 @@ def main():
 						temp_buffer_length = player.get_buffer_length()
 
 					latency = server.get_time() - player.get_playing_time()
-					print "latency is: ", latency/MS_IN_S
+					# print "latency is: ", latency/MS_IN_S
 					player_state = player.get_state()
 
 					log_bit_rate = np.log(BITRATE[bit_rate] / BITRATE[0])
-					log_last_bit_rate = np.log(BITRATE[last_bit_rate] / BITRATE[0])
+					if last_bit_rate == -1:
+						log_last_bit_rate = log_bit_rate
+					else:
+						log_last_bit_rate = np.log(BITRATE[last_bit_rate] / BITRATE[0])
 					# print(log_bit_rate, log_last_bit_rate)
 					reward = ACTION_REWARD * log_bit_rate * chunk_number \
 							- REBUF_PENALTY * freezing / MS_IN_S \
@@ -185,17 +189,17 @@ def main():
 
 					# chech whether need to wait, using number of available segs
 					if server.check_chunks_empty():
-						print "Enter wait"
+						# print "Enter wait"
 						server_wait_time = server.wait()
-						print " Has to wait: ", server_wait_time
+						# print " Has to wait: ", server_wait_time
 						assert server_wait_time > 0.0
 						assert server_wait_time < CHUNK_DURATION
-						print "Before wait, player: ", player.get_playing_time(), player.get_real_time()
+						# print "Before wait, player: ", player.get_playing_time(), player.get_real_time()
 						player.wait(server_wait_time)
-						print "After wait, player: ", player.get_playing_time(), player.get_real_time()
+						# print "After wait, player: ", player.get_playing_time(), player.get_real_time()
 						temp_buffer_length = player.get_buffer_length()
 
-					print "After wait, ", server.get_time() - (seg_idx + 1) * SEG_DURATION
+					# print "After wait, ", server.get_time() - (seg_idx + 1) * SEG_DURATION
 					server.generate_next_delivery()
 					
 					# Chech whether a seg is finished
@@ -212,18 +216,18 @@ def main():
 							# print "real time is: " + str(player.get_real_time())
 							# print server.get_time()
 							# print temp_buffer_length
-							print "before quantize: ", action_reward, player.get_playing_time(), player.get_real_time(), temp_buffer_length 
+							# print "before quantize: ", action_reward, player.get_playing_time(), player.get_real_time(), temp_buffer_length 
 							round_buffer_length = int(np.round(temp_buffer_length/MS_IN_S/BUFFER_BIN))
 							temp_buffer_shift = temp_buffer_length - round_buffer_length * BUFFER_BIN * MS_IN_S
 							round_timing = int(np.round(player.get_real_time()/MS_IN_S/TIMING_BIN))
 							temp_timing_shift = player.get_real_time() - round_timing * TIMING_BIN * MS_IN_S 
 							temp_playing_time = player.get_playing_time()
-							print "after quantize: ", action_reward, player.get_playing_time(), int(np.round(player.get_real_time()/MS_IN_S/TIMING_BIN)), int(np.round(temp_buffer_length/MS_IN_S/BUFFER_BIN)) 
+							# print "after quantize: ", action_reward, player.get_playing_time(), int(np.round(player.get_real_time()/MS_IN_S/TIMING_BIN)), int(np.round(temp_buffer_length/MS_IN_S/BUFFER_BIN)) 
 							if round_buffer_length > BUFFER_MAX/BUFFER_BIN or round_timing > TIMING_MAX/TIMING_BIN:
 								break
 							temp_seq = seq[:]
 							temp_seq.append(bit_rate)
-							print temp_seq, " seq "
+							# print temp_seq, " seq "
 							if [round_buffer_length, round_timing, bit_rate] not in curr_value_idx:
 								curr_value_idx.append([round_buffer_length, round_timing, bit_rate])
 								temp_state = player.get_state()
@@ -231,13 +235,13 @@ def main():
 								assert r_table_curr[round_buffer_length][round_timing][bit_rate][0] == float("-inf")
 								r_table_curr[round_buffer_length][round_timing][bit_rate] = [action_reward, temp_seq, temp_state, temp_buffer_shift, temp_timing_shift, temp_playing_time]
 							else:
-								print action_reward, " and ", r_table_curr[round_buffer_length][round_timing][bit_rate][0]
+								# print action_reward, " and ", r_table_curr[round_buffer_length][round_timing][bit_rate][0]
 								assert not r_table_curr[round_buffer_length][round_timing][bit_rate][0] == float("-inf")
 								if action_reward >= r_table_curr[round_buffer_length][round_timing][bit_rate][0]:
 									r_table_curr[round_buffer_length][round_timing][bit_rate] = [action_reward, temp_seq, temp_state, temp_buffer_shift, temp_timing_shift, temp_playing_time]
-							print [round_buffer_length, round_timing, bit_rate], " index saved/or not"
-							print [action_reward, temp_seq, temp_state, temp_buffer_shift, temp_timing_shift, temp_playing_time], " value saved"
-							print "<============================>"
+							# print [round_buffer_length, round_timing, bit_rate], " index saved/or not"
+							# print [action_reward, temp_seq, temp_state, temp_buffer_shift, temp_timing_shift, temp_playing_time], " value saved"
+							# print "<============================>"
 							break
 		# print curr_value_idx
 		pre_value_idx = curr_value_idx
@@ -253,7 +257,7 @@ def main():
 			max_seq = r_table_pre[value[0]][value[1]][value[2]][1]
 	print "Max reward is: ", max_reward
 	print "Max sequence is: ", max_seq
-	np.savetxt('total_reward_and_seq.txt', [max_reward, max_seq], fmt='%1.2f')
+	np.savetxt('./results/total_reward_and_seq.txt', max_seq, fmt='%1.2f')
 
 if __name__ == '__main__':
 	main()
