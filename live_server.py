@@ -13,8 +13,8 @@ RANDOM_SEED = 10
 MS_IN_S = 1000.0
 KB_IN_MB = 1000.0
 # New bitrate setting, 6 actions, correspongding to 240p, 360p, 480p, 720p, 1080p and 1440p(2k)
-# BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
-BITRATE = [300.0, 6000.0]
+BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
+# BITRATE = [300.0, 6000.0]
 # BITRATE = [500.0, 2000.0, 5000.0, 8000.0, 16000.0]	# 5 actions
 
 BITRATE_LOW_NOISE = 0.7
@@ -51,9 +51,10 @@ class Live_Server(object):
 		# End time is server current time
 		# This function is to generate available chunks for bitrate m
 		# Clone from different state
+		end_time = np.round(end_time, 4)
 		self.current_seg_idx = seg_idx - 1
 		self.current_chunk_idx = 0
-		self.time = np.round(end_time, 4)
+		self.time = end_time
 		self.chunks = []
 		self.current_seg_size = [[] for i in range(len(BITRATE))]
 		self.next_delivery = []

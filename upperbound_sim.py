@@ -6,8 +6,8 @@ import live_server
 import load
 
 # New bitrate setting, 6 actions, correspongding to 240p, 360p, 480p, 720p, 1080p and 1440p(2k)
-# BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
-BITRATE = [300.0, 6000.0]
+BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
+# BITRATE = [300.0, 6000.0]
 
 # BITRATE = [500.0, 2000.0, 5000.0, 8000.0, 12000.0]	# 5 actions
 
@@ -43,7 +43,7 @@ MISSING_PENALTY = 2.0			# not included
 # NORMAL_PLAYING = 1.0	# For 0
 # SLOW_PLAYING = 0.9		# For -1
 
-TEST_DURATION = 200				# Number of testing, 
+TEST_DURATION = 20				# Number of testing <===================== Change length here
 TIMING_MAX = TEST_DURATION*SEG_DURATION/MS_IN_S + 10.0
 TIMING_BIN = 0.1
 BUFFER_MAX = USER_LATENCY_TOL/MS_IN_S
@@ -253,6 +253,7 @@ def main():
 			max_seq = r_table_pre[value[0]][value[1]][value[2]][1]
 	print "Max reward is: ", max_reward
 	print "Max sequence is: ", max_seq
+	np.savetxt('total_reward_and_seq.txt', [max_reward, max_seq], fmt='%1.2f')
 
 if __name__ == '__main__':
 	main()
