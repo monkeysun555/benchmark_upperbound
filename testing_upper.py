@@ -106,7 +106,8 @@ def main():
 	starting_time = server.get_time()	# Server starting time
 	starting_time_idx = player.get_time_idx()
 	buffer_length = 0.0
-
+	r_batch = []
+	
 	for i in range(len(upper_actions)):
 		print "Current index: ", i
 		if init: 
@@ -121,7 +122,6 @@ def main():
 
 		last_bit_rate = bit_rate
 		bit_rate = upper_actions[i]		# Get optimal actions
-		r_batch = []
 		action_reward = 0.0				# Total reward is for all chunks within on segment
 		take_action = 1
 
