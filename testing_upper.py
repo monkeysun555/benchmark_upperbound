@@ -56,7 +56,7 @@ RATIO_HIGH_5 = 1.0			# This is the highest ratio between first chunk and the sum
 
 DATA_DIR = '../bw_traces/'
 SUMMARY_DIR = './test_results'
-LOG_FILE = './test_results/log'
+LOG_FILE = './test_results/upper'
 # TRACE_NAME = '../bw_traces/BKLYN_1.txt'
 TRACE_NAME = '70ms_loss0.5_m5.txt'
 OPT_RESULT = './results/total_reward_and_seq.txt'
@@ -92,7 +92,7 @@ def main():
 
 	initial_delay = server.get_time() - player.get_playing_time()	# This initial delay, cannot be reduced, all latency is calculated based on this
 	print initial_delay
-	log_path = LOG_FILE + '_' + TRACE_NAME  + '_testing'
+	log_path = LOG_FILE + '_' + TRACE_NAME
 	log_file = open(log_path, 'wb')
 
 	upper_actions = []
@@ -107,7 +107,7 @@ def main():
 	starting_time_idx = player.get_time_idx()
 	buffer_length = 0.0
 	r_batch = []
-	
+	last_bit_rate = -1
 	for i in range(len(upper_actions)):
 		print "Current index: ", i
 		if init: 
@@ -120,7 +120,7 @@ def main():
 			server.init_encoding()
 			init = 0
 
-		last_bit_rate = bit_rate
+		# last_bit_rate = bit_rate
 		bit_rate = upper_actions[i]		# Get optimal actions
 		action_reward = 0.0				# Total reward is for all chunks within on segment
 		take_action = 1
@@ -171,7 +171,7 @@ def main():
 				log_last_bit_rate = log_bit_rate
 			else:
 				log_last_bit_rate = np.log(BITRATE[last_bit_rate] / BITRATE[0])
-			# print(log_bit_rate, log_last_bit_rate)
+			last_bit_rate = bit_rate	# Do no move this term. This is for chunk continuous calcualtion
 			reward = ACTION_REWARD * log_bit_rate * chunk_number \
 					- REBUF_PENALTY * freezing / MS_IN_S \
 					- SMOOTH_PENALTY * np.abs(log_bit_rate - log_last_bit_rate) \
@@ -208,10 +208,9 @@ def main():
 					pass
 				else:
 					take_action = 1
+					# last_bit_rate = bit_rate
 					# print(action_reward)
 					r_batch.append(action_reward)
-					action_reward = 0.0
-
 					log_file.write(	str(server.get_time()) + '\t' +
 								    str(BITRATE[bit_rate]) + '\t' +
 									str(buffer_length) + '\t' +
@@ -222,8 +221,9 @@ def main():
 								    str(latency) + '\t' +
 								    str(player.get_state()) + '\t' +
 								    str(int(bit_rate/len(BITRATE))) + '\t' +						    
-									str(reward) + '\n')
+									str(action_reward) + '\n')
 					log_file.flush()
+					action_reward = 0.0
 					break
 
 
