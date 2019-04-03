@@ -127,7 +127,7 @@ def main():
 
 		while True:  # serve video forever
 			download_chunk_info = server.get_next_delivery()
-			print "chunk info is " + str(download_chunk_info)
+			# print "chunk info is " + str(download_chunk_info)
 			download_seg_idx = download_chunk_info[0]
 			download_chunk_idx = download_chunk_info[1]
 			download_chunk_end_idx = download_chunk_info[2]
@@ -149,7 +149,7 @@ def main():
 				sync = player.check_resync(server_time)
 			else:
 				assert player.get_state() == 0
-				assert np.round(player.buffer, 3) == 0.0
+				assert np.round(player.get_buffer_length(), 3) == 0.0
 				# Pay attention here, how time out influence next reward, the smoothness
 				# Bit_rate will recalculated later, this is for reward calculation
 				bit_rate = 0
