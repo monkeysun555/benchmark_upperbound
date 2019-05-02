@@ -59,7 +59,9 @@ SUMMARY_DIR = './test_results'
 LOG_FILE = './test_results/upper'
 # TRACE_NAME = '../bw_traces/BKLYN_1.txt'
 TRACE_NAME = '70ms_loss0.5_m5.txt'
-OPT_RESULT = './results/total_reward_and_seq.txt'
+# OPT_RESULT = './results/total_reward_and_seq_timing.txt'
+OPT_RESULT = './results/total_reward_and_seq_latency.txt'
+
 # TRAIN_TRACES = './traces/bandwidth/'
 
 def ReLU(x):
@@ -108,6 +110,8 @@ def main():
 	buffer_length = 0.0
 	r_batch = []
 	last_bit_rate = -1
+	action_reward = 0.0				# Total reward is for all chunks within on segment
+	action_freezing = 0.0
 	for i in range(len(upper_actions)):
 		print "Current index: ", i
 		if init: 
@@ -122,9 +126,8 @@ def main():
 
 		# last_bit_rate = bit_rate
 		bit_rate = upper_actions[i]		# Get optimal actions
-		action_reward = 0.0				# Total reward is for all chunks within on segment
 		take_action = 1
-
+		action_wait = 0.0
 		while True:  # serve video forever
 			download_chunk_info = server.get_next_delivery()
 			# print "chunk info is " + str(download_chunk_info)
@@ -139,7 +142,7 @@ def main():
 			real_chunk_size, download_duration, freezing, time_out, player_state = player.fetch(download_chunk_size, 
 																	download_seg_idx, download_chunk_idx, take_action, chunk_number)
 			take_action = 0
-
+			action_freezing += freezing
 			buffer_length = player.get_buffer_length()
 
 			server_time = server.update(download_duration)
@@ -185,6 +188,7 @@ def main():
 			if server.check_chunks_empty():
 				# print "Enter wait"
 				server_wait_time = server.wait()
+				action_wait += server_wait_time
 				# print " Has to wait: ", server_wait_time
 				assert server_wait_time > 0.0
 				assert server_wait_time < CHUNK_DURATION
@@ -214,9 +218,9 @@ def main():
 					log_file.write(	str(server.get_time()) + '\t' +
 								    str(BITRATE[bit_rate]) + '\t' +
 									str(buffer_length) + '\t' +
-									str(freezing) + '\t' +
+									str(action_freezing) + '\t' +
 									str(time_out) + '\t' +
-									str(server_wait_time) + '\t' +
+									str(action_wait) + '\t' +
 								    str(sync) + '\t' +
 								    str(latency) + '\t' +
 								    str(player.get_state()) + '\t' +
@@ -224,6 +228,7 @@ def main():
 									str(action_reward) + '\n')
 					log_file.flush()
 					action_reward = 0.0
+					action_freezing = 0.0
 					break
 
 
