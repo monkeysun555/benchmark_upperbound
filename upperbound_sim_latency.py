@@ -4,6 +4,7 @@ import numpy as np
 import live_player
 import live_server
 import load
+import math 
 
 # New bitrate setting, 6 actions, correspongding to 240p, 360p, 480p, 720p, 1080p and 1440p(2k)
 BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
@@ -33,7 +34,7 @@ USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL			# Accumulate latency
 
 
 DEFAULT_ACTION = 0			# lowest bitrate
-TYPE = 1
+TYPE = 2
 if TYPE == 1:
 	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
@@ -46,33 +47,31 @@ elif TYPE == 2:			# Sensitive to latency
 	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
 	SMOOTH_PENALTY = 1.0
-	LONG_DELAY_PENALTY = 5.0 * CHUNK_SEG_RATIO 
 	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
 	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 		# not included
+	LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
+	CONST = 6.0
+	X_RATIO = 1.0
 
-elif TYPE == 3:			# Sensitive to nothing (or freeze)
-	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
-	REBUF_PENALTY = 6.0		# for second
-	SMOOTH_PENALTY = 1.0
-	LONG_DELAY_PENALTY = 2.0 * CHUNK_SEG_RATIO 
-	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
-	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 		# not included
-
-elif TYPE == 4:			# Sensitive to bitrate
+elif TYPE == 3:			# Sensitive to bitrate
 	ACTION_REWARD = 2.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
 	SMOOTH_PENALTY = 1.0
-	LONG_DELAY_PENALTY = 2.0 * CHUNK_SEG_RATIO 
 	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
 	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
+	LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
+	CONST = 6.0
+	X_RATIO = 1.0
 
-elif TYPE == 5:			# Sensitive to bitrate
+elif TYPE == 4:			# Sensitive to bitrate
 	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
-	SMOOTH_PENALTY = 3.0
-	LONG_DELAY_PENALTY = 2.0 * CHUNK_SEG_RATIO 
+	SMOOTH_PENALTY = 1.5
 	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
 	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
+	LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
+	CONST = 6.0
+	X_RATIO = 1.0
 
 # UNNORMAL_PLAYING_PENALTY = 1.0 * CHUNK_FRAG_RATIO
 # FAST_PLAYING = 1.1		# For 1
@@ -101,6 +100,9 @@ TRACE_NAME = '../bw_traces/70ms_loss0.5_m5.txt'
 
 def ReLU(x):
 	return x * (x > 0)
+
+def lat_penalty(x):
+	return 1.0/(1+math.exp(CONST-X_RATIO*x)) - 1.0/(1+math.exp(CONST))
 
 def main():
 	np.random.seed(RANDOM_SEED)
@@ -225,14 +227,22 @@ def main():
 					else:
 						log_last_bit_rate = np.log(BITRATE[last_bit_rate] / BITRATE[0])
 					# print(log_bit_rate, log_last_bit_rate)
-					reward = ACTION_REWARD * log_bit_rate * chunk_number \
-							- REBUF_PENALTY * freezing / MS_IN_S \
-							- SMOOTH_PENALTY * np.abs(log_bit_rate - log_last_bit_rate) \
-							- LONG_DELAY_PENALTY*(LONG_DELAY_PENALTY_BASE**(ReLU(temp_latency-TARGET_LATENCY)/ MS_IN_S)-1) * chunk_number \
-							- MISSING_PENALTY * missing_count
-							# - UNNORMAL_PLAYING_PENALTY*(playing_speed-NORMAL_PLAYING)*download_duration/MS_IN_S
+					if TYPE == 1:
+						reward = ACTION_REWARD * log_bit_rate * chunk_number \
+								- REBUF_PENALTY * freezing / MS_IN_S \
+								- SMOOTH_PENALTY * np.abs(log_bit_rate - log_last_bit_rate) \
+								- LONG_DELAY_PENALTY*(LONG_DELAY_PENALTY_BASE**(ReLU(temp_latency-TARGET_LATENCY)/ MS_IN_S)-1) * chunk_number \
+								- MISSING_PENALTY * missing_count
+								# - UNNORMAL_PLAYING_PENALTY*(playing_speed-NORMAL_PLAYING)*download_duration/MS_IN_S
+					else:
+						reward = ACTION_REWARD * log_bit_rate * chunk_number \
+									- REBUF_PENALTY * freezing / MS_IN_S \
+									- SMOOTH_PENALTY * np.abs(log_bit_rate - log_last_bit_rate) \
+									- LONG_DELAY_PENALTY * lat_penalty(temp_latency/ MS_IN_S) * chunk_number \
+									- MISSING_PENALTY * missing_count
 					# print(reward)
 					action_reward += reward
+					last_bit_rate = bit_rate
 
 					# chech whether need to wait, using number of available segs
 					if server.check_chunks_empty():
