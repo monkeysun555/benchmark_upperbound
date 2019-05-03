@@ -59,7 +59,7 @@ elif TYPE == 3:			# Sensitive to nothing (or freeze)
 	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 		# not included
 
 elif TYPE == 4:			# Sensitive to bitrate
-	ACTION_REWARD = 3.0 * CHUNK_SEG_RATIO	
+	ACTION_REWARD = 2.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
 	SMOOTH_PENALTY = 1.0
 	LONG_DELAY_PENALTY = 2.0 * CHUNK_SEG_RATIO 

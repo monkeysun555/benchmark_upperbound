@@ -24,7 +24,7 @@ CHUNK_IN_SEG = SEG_DURATION/CHUNK_DURATION
 CHUNK_SEG_RATIO = CHUNK_DURATION/SEG_DURATION
 
 # Initial buffer length on server side
-SERVER_START_UP_TH = 2000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
+SERVER_START_UP_TH = 4000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
 # how user will start playing video (user buffer)
 USER_START_UP_TH = 2000.0
 # set a target latency, then use fast playing to compensate
@@ -34,7 +34,8 @@ USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL			# Accumulate latency
 
 
 DEFAULT_ACTION = 0			# lowest bitrate
-TYPE = 2
+TYPE = 4
+LH_STEP = 1
 if TYPE == 1:
 	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
@@ -54,7 +55,7 @@ elif TYPE == 2:			# Sensitive to latency
 	X_RATIO = 1.0
 
 elif TYPE == 3:			# Sensitive to bitrate
-	ACTION_REWARD = 3.0 * CHUNK_SEG_RATIO	
+	ACTION_REWARD = 2.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
 	SMOOTH_PENALTY = 1.0
 	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
@@ -66,7 +67,7 @@ elif TYPE == 3:			# Sensitive to bitrate
 elif TYPE == 4:			# Sensitive to bitrate
 	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
-	SMOOTH_PENALTY = 1.0
+	SMOOTH_PENALTY = 1.5
 	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
 	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 	LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
@@ -79,8 +80,7 @@ elif TYPE == 4:			# Sensitive to bitrate
 # NORMAL_PLAYING = 1.0	# For 0
 # SLOW_PLAYING = 0.9		# For -1
 
-TEST_DURATION = 3				# Number of testing <===================== Change length here
-LH_STEP = 2
+TEST_DURATION = 100				# Number of testing <===================== Change length here
 LATENCY_MAX = USER_LATENCY_TOL/MS_IN_S
 LATENCY_BIN = 0.05
 BUFFER_MAX = USER_LATENCY_TOL/MS_IN_S
@@ -167,6 +167,7 @@ def main():
 
 			for idx in range(len(pre_value_idx)):
 				# Get state
+
 				buffer_length = pre_value_idx[idx][0] * BUFFER_BIN * MS_IN_S
 				# timing = value[1] * TIMING_BIN * MS_IN_S
 				latency = pre_value_idx[idx][1] * LATENCY_BIN * MS_IN_S
@@ -177,6 +178,7 @@ def main():
 				# print "<<<<<<<<<<||||||||||||||>>>>>>>>>>>>"
 				# print "Server time is (before shift): ", server_timing, timing
 				# print value, element
+
 				for bit_rate in range(len(BITRATE)):
 					action_reward = element[0]
 					seq = element[1]
@@ -333,16 +335,20 @@ def main():
 
 		# Find optimal within a loodhead area
 		max_reward = float("-inf")
-		max_seq = None
+		max_seqs = []
 		# print "R table is:"
 		# print r_table_pre
 		for item in r_table_pre:
-			if item[0] > max_reward:
+			if item[0] >= max_reward:
 				max_reward = item[0]
-				max_seq = item[1]
-		print max_seq
-		sub_bit_rate = max_seq[seg_idx+1]
+				max_seqs.append(item[1])
+		sub_bit_rate = 0
+		for item in max_seqs:
+			if item[seg_idx+1] > sub_bit_rate:
+				sub_bit_rate = item[seg_idx+1]
+		# sub_bit_rate = max_seq[seg_idx+1]
 		tt_bitrate.append(sub_bit_rate)
+
 
 		# Then take real actions
 		buffer_length = c_pre_value_idx[0][0] * BUFFER_BIN * MS_IN_S
@@ -403,9 +409,9 @@ def main():
 				bit_rate = 0
 				sync = 1
 			if sync:
-				break
 				# To sync player, enter start up phase, buffer becomes zero
 				sync_time, missing_count = server.sync_encoding_buffer()
+				assert 0 == 1
 				player.sync_playing(sync_time)
 				temp_buffer_length = player.get_buffer_length()
 									# chech whether need to wait, using number of available segs
@@ -424,7 +430,7 @@ def main():
 			# print "latency is: ", temp_latency/MS_IN_S
 			player_state = player.get_state()
 
-			log_bit_rate = np.log(BITRATE[bit_rate] / BITRATE[0])
+			log_bit_rate = np.log(BITRATE[sub_bit_rate] / BITRATE[0])
 			if temp_last_bit_rate == -1:
 				log_last_bit_rate = log_bit_rate
 			else:
@@ -444,7 +450,7 @@ def main():
 						- MISSING_PENALTY * missing_count
 					# - UNNORMAL_PLAYING_PENALTY*(playing_speed-NORMAL_PLAYING)*download_duration/MS_IN_S
 			# print(reward)
-			temp_last_bit_rate = bit_rate
+			temp_last_bit_rate = sub_bit_rate
 			action_reward += reward
 		
 			# print "After wait, ", server.get_time() - (seg_idx + 1) * SEG_DURATION
@@ -464,7 +470,7 @@ def main():
 					round_latency = int(temp_latency/MS_IN_S/LATENCY_BIN)
 					temp_latency_shift = temp_latency - round_latency * LATENCY_BIN * MS_IN_S 
 					temp_playing_time = player.get_playing_time()
-					# print "Current playing time: ", temp_playing_time
+					assert np.round(temp_playing_time + round_buffer_length * BUFFER_BIN * MS_IN_S + temp_buffer_shift, 3) == np.round((seg_idx +1) * SEG_DURATION , 3)
 					# print "after quantize: ", action_reward, player.get_playing_time(), int(np.round(player.get_real_time()/MS_IN_S/TIMING_BIN)), int(np.round(temp_buffer_length/MS_IN_S/BUFFER_BIN)) 
 					if round_buffer_length > BUFFER_MAX/BUFFER_BIN or round_latency > LATENCY_MAX/LATENCY_BIN:
 						print "Exceed limit, discard!"
@@ -475,15 +481,13 @@ def main():
 					# print "Player state is:", temp_state
 					r_table_pre = [[action_reward, temp_seq, temp_state, temp_buffer_shift, temp_latency_shift, temp_playing_time]]
 					pre_value_idx = [[round_buffer_length, round_latency, sub_bit_rate]] 
-					print r_table_pre
-					print pre_value_idx
 					break
 
 	max_reward = r_table_pre[0][0]
 	max_seq = r_table_pre[0][1]
 	print "Max reward is: ", max_reward
 	print "Max sequence is: ", max_seq
-	np.savetxt('./results/total_reward_and_seq_latency_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt', max_seq, fmt='%1.2f')
+	np.savetxt('./subopt_results/total_reward_and_seq_latency_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP) + '.txt', max_seq, fmt='%1.2f')
 
 if __name__ == '__main__':
 	main()
