@@ -31,13 +31,49 @@ TARGET_LATENCY = SERVER_START_UP_TH + 0.5 * SEG_DURATION
 USER_FREEZING_TOL = 3000.0							# Single time freezing time upper bound
 USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL			# Accumulate latency upperbound
 
+
 DEFAULT_ACTION = 0			# lowest bitrate
-ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
-REBUF_PENALTY = 6.0		# for second
-SMOOTH_PENALTY = 1.0
-LONG_DELAY_PENALTY = 5.0 * CHUNK_SEG_RATIO 
-LONG_DELAY_PENALTY_BASE = 1.2	# for second
-MISSING_PENALTY = 3.0	* CHUNK_SEG_RATIO 		# not included
+TYPE = 1
+if TYPE == 1:
+	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
+	REBUF_PENALTY = 6.0		# for second
+	SMOOTH_PENALTY = 1.0
+	LONG_DELAY_PENALTY = 5.0 * CHUNK_SEG_RATIO 
+	LONG_DELAY_PENALTY_BASE = 1.2	# for second
+	MISSING_PENALTY = 6.0	* CHUNK_SEG_RATIO 		# not included
+
+elif TYPE == 2:			# Sensitive to latency
+	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
+	REBUF_PENALTY = 6.0		# for second
+	SMOOTH_PENALTY = 1.0
+	LONG_DELAY_PENALTY = 5.0 * CHUNK_SEG_RATIO 
+	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
+	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 		# not included
+
+elif TYPE == 3:			# Sensitive to nothing (or freeze)
+	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
+	REBUF_PENALTY = 6.0		# for second
+	SMOOTH_PENALTY = 1.0
+	LONG_DELAY_PENALTY = 2.0 * CHUNK_SEG_RATIO 
+	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
+	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 		# not included
+
+elif TYPE == 4:			# Sensitive to bitrate
+	ACTION_REWARD = 3.0 * CHUNK_SEG_RATIO	
+	REBUF_PENALTY = 6.0		# for second
+	SMOOTH_PENALTY = 1.0
+	LONG_DELAY_PENALTY = 2.0 * CHUNK_SEG_RATIO 
+	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
+	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
+
+elif TYPE == 5:			# Sensitive to bitrate
+	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
+	REBUF_PENALTY = 6.0		# for second
+	SMOOTH_PENALTY = 3.0
+	LONG_DELAY_PENALTY = 2.0 * CHUNK_SEG_RATIO 
+	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
+	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
+
 # UNNORMAL_PLAYING_PENALTY = 1.0 * CHUNK_FRAG_RATIO
 # FAST_PLAYING = 1.1		# For 1
 # NORMAL_PLAYING = 1.0	# For 0
@@ -251,6 +287,7 @@ def main():
 								# print action_reward, " and ", r_table_curr[round_buffer_length][round_latency][bit_rate][0]
 								assert not r_table_curr[round_buffer_length][round_latency][bit_rate][0] == float("-inf")
 								if action_reward >= r_table_curr[round_buffer_length][round_latency][bit_rate][0]:
+									temp_state = player.get_state()
 									r_table_curr[round_buffer_length][round_latency][bit_rate] = [action_reward, temp_seq, temp_state, temp_buffer_shift, temp_latency_shift, temp_playing_time]
 							# print [round_buffer_length, round_latency, bit_rate], " index saved/or not"
 							# print [action_reward, temp_seq, temp_state, temp_buffer_shift, temp_latency_shift, temp_playing_time], " value saved"
@@ -270,7 +307,7 @@ def main():
 			max_seq = r_table_pre[value[0]][value[1]][value[2]][1]
 	print "Max reward is: ", max_reward
 	print "Max sequence is: ", max_seq
-	np.savetxt('./results/total_reward_and_seq_latency_' + str(SERVER_START_UP_TH/MS_IN_S) + '.txt', max_seq, fmt='%1.2f')
+	np.savetxt('./results/total_reward_and_seq_latency_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt', max_seq, fmt='%1.2f')
 
 if __name__ == '__main__':
 	main()

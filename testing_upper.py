@@ -30,12 +30,30 @@ USER_FREEZING_TOL = 3000.0							# Single time freezing time upper bound
 USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL			# Accumulate latency upperbound
 
 DEFAULT_ACTION = 0			# lowest bitrate
-ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
-REBUF_PENALTY = 10.0		# for second
-SMOOTH_PENALTY = 1.0
-LONG_DELAY_PENALTY = 1.0 * CHUNK_SEG_RATIO 
-LONG_DELAY_PENALTY_BASE = 1.2	# for second
-MISSING_PENALTY = 2.0			# not included
+TYPE = 2
+if TYPE == 1:		# For normal case, old one, in test without playback speed, directly change qoe regarding change of latency
+	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
+	REBUF_PENALTY = 6.0		# for second
+	SMOOTH_PENALTY = 1.0
+	LONG_DELAY_PENALTY = 5.0 * CHUNK_SEG_RATIO 
+	LONG_DELAY_PENALTY_BASE = 1.2	# for second
+	MISSING_PENALTY = 3.0			# not included
+elif TYPE == 2:
+	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
+	REBUF_PENALTY = 6.0		# for second
+	SMOOTH_PENALTY = 1.0
+	LONG_DELAY_PENALTY = 3.0 * CHUNK_SEG_RATIO 
+	LONG_DELAY_PENALTY_BASE = 1.2	# for second
+	MISSING_PENALTY = 3.0			# not included
+elif TYPE == 3:
+	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
+	REBUF_PENALTY = 6.0		# for second
+	SMOOTH_PENALTY = 1.0
+	LONG_DELAY_PENALTY = 5.0 * CHUNK_SEG_RATIO 
+	LONG_DELAY_PENALTY_BASE = 1.2	# for second
+	MISSING_PENALTY = 3.0			# not included
+else:
+	pass
 # UNNORMAL_PLAYING_PENALTY = 1.0 * CHUNK_FRAG_RATIO
 # FAST_PLAYING = 1.1		# For 1
 # NORMAL_PLAYING = 1.0	# For 0
@@ -60,12 +78,14 @@ LOG_FILE = './test_results/upper'
 # TRACE_NAME = '../bw_traces/BKLYN_1.txt'
 TRACE_NAME = '70ms_loss0.5_m5.txt'
 # OPT_RESULT = './results/total_reward_and_seq_timing.txt'
-OPT_RESULT = './results/total_reward_and_seq_latency.txt'
-
+OPT_RESULT = './results/total_reward_and_seq_latency_'+ str(SERVER_START_UP_TH/MS_IN_S)+'.txt'
 # TRAIN_TRACES = './traces/bandwidth/'
 
 def ReLU(x):
 	return x * (x > 0)
+
+def lat_penalty(x):
+	return 1.0/(1+math.exp(2.0-0.5*x)) - 1.0/(1+math.exp(2.0))
 
 def record_tp(tp_trace, starting_time_idx, duration):
 	tp_record = []

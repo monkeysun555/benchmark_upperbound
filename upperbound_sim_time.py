@@ -240,6 +240,7 @@ def main():
 								# print action_reward, " and ", r_table_curr[round_buffer_length][round_timing][bit_rate][0]
 								assert not r_table_curr[round_buffer_length][round_timing][bit_rate][0] == float("-inf")
 								if action_reward >= r_table_curr[round_buffer_length][round_timing][bit_rate][0]:
+									temp_state = player.get_state()
 									r_table_curr[round_buffer_length][round_timing][bit_rate] = [action_reward, temp_seq, temp_state, temp_buffer_shift, temp_timing_shift, temp_playing_time]
 							# print [round_buffer_length, round_timing, bit_rate], " index saved/or not"
 							# print [action_reward, temp_seq, temp_state, temp_buffer_shift, temp_timing_shift, temp_playing_time], " value saved"
