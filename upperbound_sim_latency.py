@@ -24,7 +24,7 @@ CHUNK_IN_SEG = SEG_DURATION/CHUNK_DURATION
 CHUNK_SEG_RATIO = CHUNK_DURATION/SEG_DURATION
 
 # Initial buffer length on server side
-SERVER_START_UP_TH = 2000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
+SERVER_START_UP_TH = 3000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
 # how user will start playing video (user buffer)
 USER_START_UP_TH = 2000.0
 # set a target latency, then use fast playing to compensate
@@ -34,7 +34,7 @@ USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL			# Accumulate latency
 
 
 DEFAULT_ACTION = 0			# lowest bitrate
-TYPE = 3
+TYPE = 2
 if TYPE == 1:
 	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
