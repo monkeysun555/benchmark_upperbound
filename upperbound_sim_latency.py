@@ -34,7 +34,7 @@ USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL			# Accumulate latency
 
 
 DEFAULT_ACTION = 0			# lowest bitrate
-TYPE = 2
+TYPE = 3
 if TYPE == 1:
 	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
