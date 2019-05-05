@@ -24,7 +24,7 @@ CHUNK_IN_SEG = SEG_DURATION/CHUNK_DURATION
 CHUNK_SEG_RATIO = CHUNK_DURATION/SEG_DURATION
 
 # Initial buffer length on server side
-SERVER_START_UP_TH = 3000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
+SERVER_START_UP_TH = 2000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
 # how user will start playing video (user buffer)
 USER_START_UP_TH = 2000.0
 # set a target latency, then use fast playing to compensate
@@ -166,8 +166,14 @@ def main():
 				buffer_shift = element[3]
 				latency_shift = element[4]
 				playing_time = element[5]
+				temp_last_bit_rate = last_bit_rate
 				# print "bit rate: " + str(bit_rate)
-				assert np.round(playing_time, 4) == np.round(seg_idx * SEG_DURATION - buffer_length - buffer_shift, 4)
+				if not np.round(playing_time, 4) == np.round(seg_idx * SEG_DURATION - buffer_length - buffer_shift, 4):
+					print "Not equal"
+					print np.round(playing_time, 4)
+					print seg_idx * SEG_DURATION
+					print np.round(buffer_length, 4)
+					print np.round(buffer_shift, 4)
 				server_timing = playing_time + latency + latency_shift
 				player_timing = server_timing - initial_delay
 				# print "playing time: ", playing_time
@@ -222,10 +228,10 @@ def main():
 					player_state = player.get_state()
 
 					log_bit_rate = np.log(BITRATE[bit_rate] / BITRATE[0])
-					if last_bit_rate == -1:
+					if temp_last_bit_rate == -1:
 						log_last_bit_rate = log_bit_rate
 					else:
-						log_last_bit_rate = np.log(BITRATE[last_bit_rate] / BITRATE[0])
+						log_last_bit_rate = np.log(BITRATE[temp_last_bit_rate] / BITRATE[0])
 					# print(log_bit_rate, log_last_bit_rate)
 					if TYPE == 1:
 						reward = ACTION_REWARD * log_bit_rate * chunk_number \
@@ -242,7 +248,7 @@ def main():
 									- MISSING_PENALTY * missing_count
 					# print(reward)
 					action_reward += reward
-					last_bit_rate = bit_rate
+					temp_last_bit_rate = bit_rate
 
 					# chech whether need to wait, using number of available segs
 					if server.check_chunks_empty():
@@ -265,7 +271,7 @@ def main():
 						# Record state and get reward
 						if sync:
 							# Process sync
-							pass
+							break
 						else:
 							# print "end info"
 							# print action_reward
