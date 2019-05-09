@@ -34,10 +34,10 @@ USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL			# Accumulate latency
 
 
 DEFAULT_ACTION = 0			# lowest bitrate
-TYPE = 4
-LH_STEP = 1
+TYPE = 2
+LH_STEP = 3
 if TYPE == 1:
-	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
+	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO
 	REBUF_PENALTY = 6.0		# for second
 	SMOOTH_PENALTY = 1.0
 	LONG_DELAY_PENALTY = 5.0 * CHUNK_SEG_RATIO 
@@ -188,7 +188,12 @@ def main():
 					playing_time = element[5]
 					temp_last_bit_rate = last_bit_rate
 					# print "bit rate: " + str(bit_rate)
-					assert np.round(playing_time, 4) == np.round((seg_idx + step) * SEG_DURATION - buffer_length - buffer_shift, 4)
+					if not np.round(playing_time, 4) == np.round((seg_idx + step) * SEG_DURATION - buffer_length - buffer_shift, 4):
+						print "Not equal during lookahead"
+						print playing_time
+						print SEG_DURATION*(seg_idx+step)
+						print buffer_length
+						print buffer_shift
 					server_timing = playing_time + latency + latency_shift
 					player_timing = server_timing - initial_delay
 					# print "playing time: ", playing_time
@@ -365,7 +370,12 @@ def main():
 		playing_time = element[5]
 		temp_last_bit_rate = last_bit_rate
 
-		assert np.round(playing_time, 4) == np.round((seg_idx) * SEG_DURATION - buffer_length - buffer_shift, 4)
+		if not np.round(playing_time, 4) == np.round(seg_idx * SEG_DURATION - buffer_length - buffer_shift, 4):
+			print "Not equal during lookahead"
+			print playing_time
+			print SEG_DURATION*(seg_idx+step)
+			print buffer_length
+			print buffer_shift
 		server_timing = playing_time + latency + latency_shift		# Get server real time
 		player_timing = server_timing - initial_delay					# Get player real time
 		# print "playing time: ", playing_time

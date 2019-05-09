@@ -39,7 +39,7 @@ DEFAULT_ACTION = 0			# lowest bitrate
 TYPE = 2								# <============== Modified
 TYPES = [2, 3, 4]
 LH_STEP = 1								# <============== Modified
-LH_STEPS = [1,2,5]
+LH_STEPS = [1, 2, 3, 5, 10, -1]
 if TYPE == 1:
 	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
@@ -102,9 +102,10 @@ DATA_DIR = '../bw_traces/'
 TRACE_NAME = '70ms_loss0.5_m5.txt'
 # OPT_RESULT = './results/total_reward_and_seq_timing.txt'
 if IF_SUBOPTI:
-	OPT_RESULT = './subopt_results/total_reward_and_seq_latency_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP) + '.txt'
+	# OPT_RESULT = './subopt_results/total_reward_and_seq_latency_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP) + '.txt'
 	SUMMARY_DIR = './sub_test_results'
 	LOG_FILE = './sub_test_results/subupper'
+	# UPPER_DIR = './results'
 else:
 	OPT_RESULT = './results/total_reward_and_seq_latency_'+ str(SERVER_START_UP_TH/MS_IN_S)+'.txt'
 	SUMMARY_DIR = './test_results'
@@ -127,22 +128,71 @@ def record_tp(tp_trace, starting_time_idx, duration):
 		tp_record.append(tp_trace[starting_time_idx + i + offset])
 	return tp_record
 
+# def curves_show(sub_r):
+# 	assert len(sub_r) == len(TYPES) * len(BUFFER_LENGTHS)
+# 	for i in range(len(TYPES)):
+# 		for j in range(len(BUFFER_LENGTHS)):
+# 			curr_curve = sub_r[i*len(TYPES)+j]
+
+
 def m_main():
 	if not os.path.exists(SUMMARY_DIR):
 		os.makedirs(SUMMARY_DIR)
 
 	all_rewards = []
+	plot_rewards = []
 	total_path = './sub_test_results/plot_all_data.txt'
 	end_log_file = open(total_path, 'wb')
 	for t in TYPES:
+		if t == 1:
+			ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
+			REBUF_PENALTY = 6.0		# for second
+			SMOOTH_PENALTY = 1.0
+			LONG_DELAY_PENALTY = 5.0 * CHUNK_SEG_RATIO 
+			LONG_DELAY_PENALTY_BASE = 1.2	# for second
+			MISSING_PENALTY = 6.0	* CHUNK_SEG_RATIO 		# not included
+
+		elif t == 2:			# Sensitive to latency
+			ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
+			REBUF_PENALTY = 6.0		# for second
+			SMOOTH_PENALTY = 1.0
+			# LONG_DELAY_PENALTY_BASE = 1.2	# for second
+			MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 		# not included
+			LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
+			CONST = 6.0
+			X_RATIO = 1.0
+
+		elif t == 3:			# Sensitive to bitrate
+			ACTION_REWARD = 2.0 * CHUNK_SEG_RATIO	
+			REBUF_PENALTY = 6.0		# for second
+			SMOOTH_PENALTY = 1.0
+			# LONG_DELAY_PENALTY_BASE = 1.2	# for second
+			MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
+			LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
+			CONST = 6.0
+			X_RATIO = 1.0
+
+		elif t == 4:			# Sensitive to bitrate
+			ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
+			REBUF_PENALTY = 6.0		# for second
+			SMOOTH_PENALTY = 1.5
+			# LONG_DELAY_PENALTY_BASE = 1.2	# for second
+			MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
+			LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
+			CONST = 6.0
+			X_RATIO = 1.0
 		t_rewards = []
 		t_rewards.append('type' + str(t))
 		for b_l in BUFFER_LENGTHS:
 			bl_rewards = []
+			curve_rewards = [t, b_l/MS_IN_S]
 			bl_rewards.append('buffer' + str(b_l/MS_IN_S))
-			for lh_l in LH_STEPS:
 
-				subopt_path = './subopt_results/total_reward_and_seq_latency_' + str(b_l/MS_IN_S) + '_type_' + str(t) + '_step_' + str(lh_l) + '.txt'
+			for lh_l in LH_STEPS:
+				if lh_l == -1:
+					subopt_path = './results/total_reward_and_seq_latency_' + str(b_l/MS_IN_S) + '_type_' + str(t) + '.txt'
+				else:
+					subopt_path = './subopt_results/total_reward_and_seq_latency_' + str(b_l/MS_IN_S) + '_type_' + str(t) + '_step_' + str(lh_l) + '.txt'
 				print subopt_path
 				np.random.seed(RANDOM_SEED)
 
@@ -158,7 +208,7 @@ def m_main():
 
 				initial_delay = server.get_time() - player.get_playing_time()	# This initial delay, cannot be reduced, all latency is calculated based on this
 				print initial_delay
-				log_path = LOG_FILE + '_buff' + str(b_l) + '_type_' + str(t) + '_step_' + str(lh_l)
+				log_path = LOG_FILE + '_buff' + str(b_l) + '_type_' + str(t) + '_step_' + str(lh_l) + '.txt'
 				log_file = open(log_path, 'wb')
 
 				upper_actions = []
@@ -293,21 +343,36 @@ def m_main():
 							log_file.write(	str(server.get_time()) + '\t' +
 										    str(BITRATE[bit_rate]) + '\t' +
 											str(buffer_length) + '\t' +
-											str(action_freezing) + '\t' +
+											# str(action_freezing) + '\t' +
+											str(freezing) + '\t' +
 											str(time_out) + '\t' +
-											str(action_wait) + '\t' +
+											# str(action_wait) + '\t' +
+											str(server_wait_time) + '\t' +
 										    str(sync) + '\t' +
 										    str(latency) + '\t' +
 										    str(player.get_state()) + '\t' +
 										    str(int(bit_rate/len(BITRATE))) + '\t' +						    
-											str(action_reward) + '\n')
+											# str(action_reward) + '\n')
+											str(reward) + '\n')
 							log_file.flush()
 							action_reward = 0.0
 							action_freezing = 0.0
 							break
 
+						else:
+							log_file.write(	str(server.get_time()) + '\t' +
+										    str(BITRATE[bit_rate]) + '\t' +
+											str(buffer_length) + '\t' +
+											str(freezing) + '\t' +
+											str(time_out) + '\t' +
+											str(server_wait_time) + '\t' +
+										    str(sync) + '\t' +
+										    str(latency) + '\t' +
+										    str(player.get_state()) + '\t' +
+										    str(int(bit_rate/len(BITRATE))) + '\t' +						    
+											str(reward) + '\n')
+							log_file.flush()
 
-				# need to modify
 				time_duration = server.get_time() - starting_time
 				tp_record = record_tp(player.get_throughput_trace(), starting_time_idx, time_duration) 
 				print(starting_time_idx, TRACE_NAME, len(player.get_throughput_trace()), player.get_time_idx(), len(tp_record), np.sum(r_batch))
@@ -319,11 +384,14 @@ def m_main():
 				log_file.close()
 
 				bl_rewards.append(str(lh_l) +  ': ' + str(np.round(np.sum(r_batch), 3)))
+				curve_rewards.append(np.round(np.sum(r_batch)))
 
+			plot_rewards.append(curve_rewards)
 			t_rewards.append(bl_rewards)
 		all_rewards.append(t_rewards)
 	print all_rewards
 	end_log_file.close()
+	# curves_show(plot_rewards)
 
 def main():
 	np.random.seed(RANDOM_SEED)
@@ -478,18 +546,33 @@ def main():
 					log_file.write(	str(server.get_time()) + '\t' +
 								    str(BITRATE[bit_rate]) + '\t' +
 									str(buffer_length) + '\t' +
-									str(action_freezing) + '\t' +
+									str(freezing) + '\t' +
 									str(time_out) + '\t' +
-									str(action_wait) + '\t' +
+									# str(action_wait) + '\t' +
+									str(server_wait_time) + '\t' +
 								    str(sync) + '\t' +
 								    str(latency) + '\t' +
 								    str(player.get_state()) + '\t' +
 								    str(int(bit_rate/len(BITRATE))) + '\t' +						    
-									str(action_reward) + '\n')
+									# str(action_reward) + '\n')
+									str(reward) + '\n')
 					log_file.flush()
 					action_reward = 0.0
 					action_freezing = 0.0
 					break
+			else:
+				log_file.write(	str(server.get_time()) + '\t' +
+							    str(BITRATE[bit_rate]) + '\t' +
+								str(buffer_length) + '\t' +
+								str(freezing) + '\t' +
+								str(time_out) + '\t' +
+								str(server_wait_time) + '\t' +
+							    str(sync) + '\t' +
+							    str(latency) + '\t' +
+							    str(player.get_state()) + '\t' +
+							    str(int(bit_rate/len(BITRATE))) + '\t' +						    
+								str(reward) + '\n')
+				log_file.flush()
 
 	# need to modify
 	time_duration = server.get_time() - starting_time
