@@ -24,7 +24,7 @@ CHUNK_IN_SEG = SEG_DURATION/CHUNK_DURATION
 CHUNK_SEG_RATIO = CHUNK_DURATION/SEG_DURATION
 
 # Initial buffer length on server side
-SERVER_START_UP_TH = 4000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
+SERVER_START_UP_TH = 3000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
 # how user will start playing video (user buffer)
 USER_START_UP_TH = 2000.0
 # set a target latency, then use fast playing to compensate
@@ -34,8 +34,8 @@ USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL			# Accumulate latency
 
 
 DEFAULT_ACTION = 0			# lowest bitrate
-TYPE = 2
-LH_STEP = 3
+TYPE = 3
+LH_STEP = 1
 if TYPE == 1:
 	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO
 	REBUF_PENALTY = 6.0		# for second
@@ -97,7 +97,9 @@ DATA_DIR = '../bw_traces/'
 SUMMARY_DIR = './subopt_results'
 LOG_FILE = './results/log'
 # TRACE_NAME = '../bw_traces/BKLYN_1.txt'
-TRACE_NAME = '../bw_traces/70ms_loss0.5_m5.txt'
+# TRACE_NAME = '../bw_traces/70ms_loss0.5_m5.txt'
+TRACE_NAME = '../bw_traces/85ms_loss3.txt'
+
 # TRAIN_TRACES = './traces/bandwidth/'
 
 def ReLU(x):
@@ -352,8 +354,9 @@ def main():
 			if item[seg_idx+1] > sub_bit_rate:
 				sub_bit_rate = item[seg_idx+1]
 		# sub_bit_rate = max_seq[seg_idx+1]
+		if seg_idx == 83:
+			sub_bit_rate = sub_bit_rate - 1
 		tt_bitrate.append(sub_bit_rate)
-
 
 		# Then take real actions
 		buffer_length = c_pre_value_idx[0][0] * BUFFER_BIN * MS_IN_S
@@ -497,7 +500,8 @@ def main():
 	max_seq = r_table_pre[0][1]
 	print "Max reward is: ", max_reward
 	print "Max sequence is: ", max_seq
-	np.savetxt('./subopt_results/total_reward_and_seq_latency_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP) + '.txt', max_seq, fmt='%1.2f')
+	# np.savetxt('./subopt_results/total_reward_and_seq_latency_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP) + '.txt', max_seq, fmt='%1.2f')
+	np.savetxt('./bak/buffer_' + str(SERVER_START_UP_TH/MS_IN_S) + '_lh_'  + str(LH_STEP) + '_file_6.txt', max_seq, fmt='%1.2f')
 
 if __name__ == '__main__':
 	main()
