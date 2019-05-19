@@ -111,7 +111,9 @@ def main():
 	if not os.path.exists(SUMMARY_DIR):
 		os.makedirs(SUMMARY_DIR)
 	# Initial server and player
-	cooked_time, cooked_bw = load.load_single_trace(TRACE_NAME)
+
+	cooked_time, cooked_bw = load.new_load_single_trace(TRACE_NAME)
+	#cooked_time, cooked_bw = load.load_single_trace(TRACE_NAME)
 
 	player = live_player.Live_Player(time_trace=cooked_time, throughput_trace=cooked_bw, 
 										seg_duration=SEG_DURATION, chunk_duration=CHUNK_DURATION,
