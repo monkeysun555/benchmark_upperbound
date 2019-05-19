@@ -142,7 +142,9 @@ def m_main():
 	all_rewards = []
 	plot_rewards = []
 	total_path = './sub_test_results/plot_all_data.txt'
+	total_rate_opt_path_t2_f3 = './sub_test_results/t2_f3.txt'
 	end_log_file = open(total_path, 'wb')
+	t2_f3_file = open(total_rate_opt_path_t2_f3, 'wb')
 	for t in TYPES:
 		if t == 1:
 			ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
@@ -223,8 +225,10 @@ def m_main():
 				starting_time_idx = player.get_time_idx()
 				buffer_length = 0.0
 				r_batch = []
+				new_r_batch = []
 				last_bit_rate = -1
 				action_reward = 0.0				# Total reward is for all chunks within on segment
+				rate_action_reward = 0.0
 				action_freezing = 0.0
 				for i in range(len(upper_actions)):
 					print "Current index: ", i
@@ -306,6 +310,9 @@ def m_main():
 								# - UNNORMAL_PLAYING_PENALTY*(playing_speed-NORMAL_PLAYING)*download_duration/MS_IN_S
 						# print(reward)
 						action_reward += reward
+						# print reward
+						# print LONG_DELAY_PENALTY * lat_penalty(latency/ MS_IN_S) * chunk_number
+						rate_action_reward += (reward + LONG_DELAY_PENALTY * lat_penalty(latency/ MS_IN_S) * chunk_number )
 						last_bit_rate = bit_rate	# Do no move this term. This is for chunk continuous calcualtion
 
 						# chech whether need to wait, using number of available segs
@@ -340,6 +347,7 @@ def m_main():
 							# last_bit_rate = bit_rate
 							# print(action_reward)
 							r_batch.append(action_reward)
+							new_r_batch.append(rate_action_reward)
 							log_file.write(	str(server.get_time()) + '\t' +
 										    str(BITRATE[bit_rate]) + '\t' +
 											str(buffer_length) + '\t' +
@@ -357,6 +365,7 @@ def m_main():
 							log_file.flush()
 							action_reward = 0.0
 							action_freezing = 0.0
+							rate_action_reward = 0.0
 							break
 
 						else:
@@ -378,6 +387,10 @@ def m_main():
 				print(starting_time_idx, TRACE_NAME, len(player.get_throughput_trace()), player.get_time_idx(), len(tp_record), np.sum(r_batch))
 				end_log_file.write('type: ' + str(t) + ' buffer: ' + str(b_l) + ' step: ' + str(lh_l) + ' rewards: ' + str(np.round(np.sum(r_batch), 3)))
 				end_log_file.write('\n')
+				if t == 2:
+					t2_f3_file.write('type: ' + str(t) + ' buffer: ' + str(b_l) + ' step: ' + str(lh_l) \
+						+ ' rewards: ' + str(np.round(np.sum(r_batch), 3)) + ' new_r: ' + str(np.round(np.sum(new_r_batch), 3))  )
+					t2_f3_file.write('\n')
 				log_file.write('\t'.join(str(tp) for tp in tp_record))
 				log_file.write('\n' + str(starting_time))
 				log_file.write('\n')

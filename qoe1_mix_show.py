@@ -1,6 +1,9 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+# mpl.rcParams['text.usetex'] = True
+mpl.rcParams['text.latex.preview'] = True
 
 SERVER_START_UP_TH = 2000.0			#<=== change this to get corresponding log files
 BUFFER_LENGTHS = [2000.0, 3000.0, 4000.0]
@@ -21,82 +24,44 @@ START_UP_TH = 2000.0
 
 CHUNK_IN_SEG = int(SEG_DURATION/CHUNK_DURATION)		# 4
 
-def plt_fig(trace, data_name, data_type):
-	# print(tp_trace)
-	y_axis_upper = np.ceil(np.max(trace)*1.35)
-
-	# For negative reward
-	# y_axis_lower = np.floor(np.minimum(np.min(trace)*1.1,0.0))
-	y_axis_lower = 0.0
-
-	p = plt.figure(figsize=(20,5))
-	plt.plot(range(1,len(trace)+1), trace, color='chocolate', label=data_name + '_' + data_type, linewidth=1.5,alpha=0.9)
-	plt.legend(loc='upper right',fontsize=30)
-	plt.grid(linestyle='dashed', axis='y',linewidth=1.5, color='gray')
-	plt.axis([0, len(trace), y_axis_lower, y_axis_upper])
-	plt.xticks(np.arange(0, len(trace)+1, 50))
-	plt.tick_params(labelsize=20)
-	# plt.yticks(np.arange(200, 1200+1, 200))
-	plt.close()
-	return p
-
-def plt_fig_full(trace, data_name, data_type):
-	# print(tp_trace)
-	if data_type == 'bitrate':
-		# y_axis_upper = np.ceil(np.max(trace)*1.35)
-		y_axis_upper = 8000.0
-	elif data_type == 'reward':
-		y_axis_upper = 1.0
-	# For negative reward
-	# y_axis_lower = np.floor(np.minimum(np.min(trace)*1.1,0.0))
-	y_axis_lower = 0.0
-
-	x_value = []
-	curr_x = CHUNK_DURATION/MS_IN_S
-	for i in range(len(trace)):
-		x_value.append(curr_x)
-		curr_x += SEG_DURATION/MS_IN_S
-	p = plt.figure(figsize=(20,5))
-	plt.plot(x_value, trace, color='chocolate', label=data_name + '_' + data_type, linewidth=1.5,alpha=0.9)
-	plt.legend(loc='upper right',fontsize=30)
-	plt.grid(linestyle='dashed', axis='y',linewidth=1.5, color='gray')
-	plt.axis([0, int(len(trace)/SEG_DURATION*MS_IN_S), y_axis_lower, y_axis_upper])
-	plt.xticks(np.arange(0, int(len(trace)/SEG_DURATION*MS_IN_S)+1, 50))
-	# plt.yticks(np.arange(200, 1200+1, 200))
-	plt.tick_params(labelsize=20)
-	plt.close()
-	return p
-
-
 def plt_fig_mix_bw_action(tp_trace, bitrates):
 	colors = ['dodgerblue','chocolate','forestgreen']
-	types = ['-', '-.']
+	types = ['-','-','-', '--']
 	# type1: tp,  type2: bitrate
 	y_axis_upper = 10000.0
 	# For negative reward
 	# y_axis_lower = np.floor(np.minimum(np.min(trace)*1.1,0.0))
 	y_axis_lower = 0.0
-
+	print len(tp_trace)
+	print len(bitrates[0])
 	p = plt.figure(figsize=(20,5))
 	for i in range(len(bitrates)):
 		x_value = []
+		y_value = []
 		curr_x = 0.0
-		for _ in range(len(bitrates[i])):
+		for j in range(len(bitrates[i])/CHUNK_IN_SEG):
 			x_value.append(curr_x)
-			curr_x += CHUNK_DURATION/MS_IN_S		# Plot in chunks
+			x_value.append(curr_x+0.999)
+			y_value.append(bitrates[i][j*CHUNK_IN_SEG])
+			y_value.append(bitrates[i][j*CHUNK_IN_SEG])
+			curr_x += 1		# Plot in chunks
 
-		plt.plot(x_value, bitrates[i], types[0], color=colors[i], linewidth=1.5, alpha=0.9)
+		plt.plot(x_value, y_value, types[i], color=colors[i], linewidth=3, alpha=0.5)
 	
 	plt.plot(range(1,len(tp_trace)+1), tp_trace*KB_IN_MB, color='k', linewidth=1.5,alpha=0.9)
 
-	plt.legend((r'Bitrate ($l_{0}=2s$)', r'Bitrate ($l_{0}=3s$)', \
-		r'Bitrate($l_{0}=4s$)', 'Bandwidth'), loc='upper center', fontsize=20, ncol=4, borderpad=0.25)
+	plt.legend(('Buffer Length(' + r'$\alpha$' + '=2'+ r'$\Delta$' + ')', \
+		'Buffer Length(' + r'$\alpha$' + '=3'+ r'$\Delta$' + ')', \
+		'Buffer Length(' + r'$\alpha$' + '=4'+ r'$\Delta$' + ')'), loc='upper center', fontsize=20, ncol=4, borderpad=0.25, frameon=False)
 
 	plt.grid(linestyle='dashed', axis='y',linewidth=0.5, color='gray')
 	plt.axis([0, int(len(tp_trace)/SEG_DURATION*MS_IN_S), y_axis_lower, y_axis_upper])
-	plt.xticks(np.arange(0, int(len(tp_trace)/SEG_DURATION*MS_IN_S)+1, 20))
-	# plt.yticks(np.arange(200, 1200+1, 200))
-	plt.tick_params(labelsize=20)
+	plt.xticks(np.arange(0, int(len(tp_trace)/SEG_DURATION*MS_IN_S)+1, 50))
+	plt.xlabel('Time(s)', fontweight='bold', fontsize=22)
+	plt.yticks(np.arange(0,y_axis_upper,2000), np.arange(0,10,2) )
+	plt.ylabel('Bitrate (Mbps)', fontweight='bold', fontsize=22)
+	p.set_tight_layout(True)
+	plt.tick_params(labelsize=22)
 
 	plt.close()
 	return p
@@ -105,7 +70,7 @@ def plt_fig_mix_bw_action(tp_trace, bitrates):
 def plt_buffer_mix(time_traces, buffer_traces, state_traces, latency_traces, data_type):
 	# y_axis_upper = np.ceil(np.max(latency_trace)*1.6/MS_IN_S)
 	colors = ['dodgerblue','chocolate','forestgreen']
-	types = ['-', '-.']
+	types = ['-', '--']
 	y_axis_upper = 6.5
 	insert_buffer_traces = []
 	insert_time_traces = []
@@ -187,16 +152,21 @@ def plt_buffer_mix(time_traces, buffer_traces, state_traces, latency_traces, dat
 		# print len(latency_times[i])
 		# print len(latency_traces[i])
 		plt.plot(plt_time_traces[i], plt_buffer_traces[i], types[0], color=colors[i], linewidth=1.5, alpha=0.9)
-		plt.plot(latency_times[i], latency_traces[i], types[1], color=colors[i], linewidth=1.5, alpha=0.9)
+		plt.plot(latency_times[i], latency_traces[i], types[1], color=colors[i], linewidth=3, alpha=0.9)
 		# plt.plot([latency_time[0], latency_time[-1]], [starting_time/MS_IN_S]*2, 'r--', linewidth=1.5,alpha=0.9)
 	
-	plt.legend((r'Buffer Length ($l_{0}=2s$)', r'Latency ($l_{0}=2s$)', \
-				r'Buffer Length ($l_{0}=3s$)', r'Latency ($l_{0}=3s$)', \
-				r'Buffer Length ($l_{0}=4s$)', r'Latency ($l_{0}=4s$)'), loc='upper center',fontsize=20 ,ncol=3, borderpad=0.25)
-	plt.grid(linestyle='dashed', axis='y',linewidth=0.5, color='gray')
+	plt.legend(('Buffer Length(' + r'$\alpha$' + '=2'+ r'$\Delta$' + ')' , r'Latency (' + r'$\alpha$' + '=2'+ r'$\Delta$'+ ')', \
+				'Buffer Length(' + r'$\alpha$' + '=3'+ r'$\Delta$' + ')' , r'Latency (' + r'$\alpha$' + '=3'+ r'$\Delta$'+ ')', \
+				'Buffer Length(' + r'$\alpha$' + '=4'+ r'$\Delta$' + ')' , r'Latency (' + r'$\alpha$' + '=4'+ r'$\Delta$'+ ')'), \
+				loc='upper center',fontsize=20 ,ncol=3, borderpad=0.25, frameon=False)
+	# plt.grid(linestyle='dashed', axis='y',linewidth=0.5, color='gray')
 	plt.axis([0, plt_time_traces[-1][-1], 0, y_axis_upper])
 	plt.xticks(np.arange(0, plt_time_traces[-1][-1]+1, 50))
-	plt.tick_params(labelsize=20)
+	plt.xlabel('Time(s)', fontweight='bold', fontsize=22)
+	plt.yticks(np.arange(0,y_axis_upper,2))
+	plt.ylabel('Buffer(s)', fontweight='bold', fontsize=22)
+	p.set_tight_layout(True)
+	plt.tick_params(labelsize=22)
 	
 	# plt.yticks(np.arange(200, 1200+1, 200))
 
@@ -204,98 +174,6 @@ def plt_buffer_mix(time_traces, buffer_traces, state_traces, latency_traces, dat
 	return p
 
 
-def bar_freezing(time_trace, freezing_trace, data_name, data_type):
-	bar_pos = []
-	height = []
-	for i in range(len(freezing_trace)):
-		if not freezing_trace[i] == 0:
-			bar_pos.append((time_trace[i] - freezing_trace[i]/2.0)/ MS_IN_S)
-			height.append(freezing_trace[i] /MS_IN_S)
-
-	# y_axis_upper = np.max(height) * 1.35
-	y_axis_upper = 3.0
-	p = plt.figure(figsize=(20,5))
-
-	plt.bar(bar_pos, height, color='chocolate', label=data_name + '_' + data_type)
-	plt.legend(loc='upper right',fontsize=30)
-	plt.grid(linestyle='dashed', axis='y',linewidth=1.5, color='gray')
-	plt.axis([0, time_trace[-1]/MS_IN_S + 1, 0, y_axis_upper])
-	plt.xticks(np.arange(0, time_trace[-1]/MS_IN_S + 1, 50))
-	plt.tick_params(labelsize=20)
-	# plt.yticks(np.arange(200, 1200+1, 200))
-	plt.close()
-	return p
-
-def bar_wait(time_trace, wait_trace, data_name, data_type):
-	bar_pos = []
-	height = []
-	for i in range(len(wait_trace)):
-		if not wait_trace[i] == 0:
-			bar_pos.append((time_trace[i] - wait_trace[i]/2.0)/ MS_IN_S)
-			height.append(wait_trace[i] /MS_IN_S)
-
-	# y_axis_upper = np.max(height) * 1.35
-	y_axis_upper = 1.0
-	p = plt.figure(figsize=(20,5))
-
-	plt.bar(bar_pos, height, color='chocolate', label=data_name + '_' + data_type)
-	plt.legend(loc='upper right',fontsize=30)
-	plt.grid(linestyle='dashed', axis='y',linewidth=1.5, color='gray')
-	plt.axis([0, time_trace[-1]/MS_IN_S + 1, 0, y_axis_upper])
-	plt.xticks(np.arange(0, time_trace[-1]/MS_IN_S + 1, 50))
-	plt.tick_params(labelsize=20)
-	# plt.yticks(np.arange(200, 1200+1, 200))
-	plt.close()
-	return p
-
-# def bar_speed(time_trace, speed_trace, data_name, data_type):
-# 	bar_pos = []
-# 	height = []
-# 	width = []
-# 	for i in range(len(speed_trace)):
-# 		if not speed_trace[i] == 0:
-# 			bar_pos.append(time_trace[i]/ MS_IN_S)
-# 			height.append(speed_trace[i])
-# 			width.append(0.1)
-
-# 	y_axis_upper = np.max(height) * 1.35
-# 	p = plt.figure(figsize=(20,5))
-
-# 	plt.bar(bar_pos, height, width, color='chocolate', label=data_name + '_' + data_type)
-# 	plt.legend(loc='upper right',fontsize=30)
-# 	plt.grid(linestyle='dashed', axis='y',linewidth=1.5, color='gray')
-# 	plt.axis([0, time_trace[-1]/MS_IN_S + 1, 0, y_axis_upper])
-# 	plt.xticks(np.arange(0, time_trace[-1]/MS_IN_S + 1, 50))
-# 	plt.tick_params(labelsize=20)
-# 	# plt.yticks(np.arange(200, 1200+1, 200))
-# 	plt.close()
-# 	return p
-
-def bar_missing(time_trace, sync_trace, missing_trace, data_name, data_type):
-	bar_pos = []
-	height = []
-	for i in range(len(sync_trace)):
-		if sync_trace[i] == 1:
-			assert not missing_trace[i] == 0
-			bar_pos.append(time_trace[i]/ MS_IN_S)
-			height.append(missing_trace[i])
-
-	if len(height) >= 1:
-		y_axis_upper = np.max(height) * 1.35
-
-		p = plt.figure(figsize=(20,5))
-
-		plt.bar(bar_pos, height, color='chocolate', label=data_name + '_' + data_type)
-		plt.legend(loc='upper right',fontsize=30)
-		plt.grid(linestyle='dashed', axis='y',linewidth=1.5, color='gray')
-		plt.axis([0, time_trace[-1]/MS_IN_S + 1, 0, y_axis_upper])
-		plt.xticks(np.arange(0, time_trace[-1]/MS_IN_S + 1, 50))
-		plt.tick_params(labelsize=20)
-		# plt.yticks(np.arange(200, 1200+1, 200))
-		plt.close()
-		return p
-	else:
-		return None
 
 
 def main():
@@ -374,32 +252,12 @@ def main():
 		buffer_traces.append(buffer_trace)
 		latency_traces.append(latency_trace)
 		state_traces.append(state_trace)
-		# For numerical
-		# n_files.append(data_name)
-		# n_reward.append(np.round(np.sum(reward_trace)/len(reward_trace),3))
-		# n_freezing.append(np.round(np.sum(freezing_trace)/MS_IN_S,3))
-		# n_n_freezing.append(np.sum([ x>0 for x in freezing_trace]))
-		# n_latency.append(np.round(np.sum(latency_trace)/(len(latency_trace)*MS_IN_S),3))
-		# n_throughput.append(np.round(np.sum(tp_trace)/len(tp_trace),3))
-		# n_sync.append(np.sum(sync_trace))
-		# n_rate.append(np.round(np.sum(bitrate_trace)/len(bitrate_trace), 3))
-		# n_starting_time.append(starting_time)
-
-		# switch = 0	
-		# temp_rate = bitrate_trace[0]
-		# for i in range(len(bitrate_trace)):
-		# 	if not bitrate_trace[i] == temp_rate:
-		# 		switch += 1
-		# 		temp_rate = bitrate_trace[i]
-		# assert switch >= np.sum(sync_trace)
-		# n_switch.append(switch-np.sum(sync_trace))
 
 		# Time
 		real_time_trace = [float(info[0]) for info in records]
 		plt_time_trace = [r_time - starting_times[i] for r_time in real_time_trace]
 		plt_time_traces.append(plt_time_trace)
-		# For tp
-		# print(len(tp_trace))
+
 
 	# Plot total figures
 	
@@ -410,86 +268,6 @@ def main():
 
 	buffer_fig.savefig(FIGURES_DIR +  't2_buffers.eps', format='eps', dpi=1000, figsize=(20, 5))
 	server_mix_fig.savefig(FIGURES_DIR +  't2_bitrates.eps', format='eps', dpi=1000, figsize=(20, 5))
-
-		# For bitrate
-	# 	bitrate_fig = plt_fig_full(bitrate_trace, data_name, 'bitrate')
-	# 	bitrate_figs.append([data_name, 'bitrate', bitrate_fig])
-
-	# 	#For reward
-	# 	# print(reward)
-	# 	reward_fig = plt_fig_full(reward_trace, data_name, 'reward')
-	# 	reward_figs.append([data_name,'reward', reward_fig])
-
-	# 	# For freezing
-	# 	freezing_fig = bar_freezing(plt_time_trace, freezing_trace, data_name, 'freezing')
-	# 	freezing_figs.append([data_name, 'freezing', freezing_fig])
-
-
-	# 	# For server wait
-	# 	server_wait_fig = bar_wait(plt_time_trace, server_wait_trace, data_name, 'idle')
-	# 	server_wait_figs.append([data_name, 'idle', server_wait_fig])
-
-	# 	# For missing
-	# 	# missing_fig = bar_missing(plt_time_trace, sync_trace, missing_trace, data_name, 'missing')
-	# 	# if not missing_fig == None:
-	# 	# 	missing_figs.append([data_name, 'missing', missing_fig])
-
-	# 	# For speed 
-	# 	# speed_fig = bar_speed(plt_time_trace, speed_trace, data_name, 'speed')
-	# 	# speed_figs.append([data_name, 'speed', speed_fig])
-
-	# 	server_mix_fig = plt_fig_mix_bw_action(tp_trace, bitrate_trace, data_name, 'tp', 'bitrate')
-	# 	server_mix_figs.append([data_name, 'mix', server_mix_fig])
-
-
-	# if SAVE:
-	# 	for p in tp_figs:
-	# 		p[2].savefig(FIGURES_DIR + p[0] + '_' + p[1] + '.eps', format='eps', dpi=1000, figsize=(30, 10))
-
-	# 	# for p in reward_figs:
-	# 	# 	p[2].savefig(FIGURES_DIR + p[0] + '_' + p[1] + '.eps', format='eps', dpi=1000, figsize=(30, 10))
-		
-	# 	for p in bitrate_figs:
-	# 		p[2].savefig(FIGURES_DIR + p[0] + '_' + p[1] + '.eps', format='eps', dpi=1000, figsize=(30, 10))
-		
-	# 	for p in buffer_figs:
-	# 		p[2].savefig(FIGURES_DIR + p[0] + '_' + p[1] + '.eps', format='eps', dpi=1000, figsize=(30, 10))
-		
-	# 	for p in freezing_figs:
-	# 		p[2].savefig(FIGURES_DIR + p[0] + '_' + p[1] + '.eps', format='eps', dpi=1000, figsize=(30, 10))
-		
-	# 	# for p in server_wait_figs:
-	# 	# 	p[2].savefig(FIGURES_DIR + p[0] + '_' + p[1] + '.eps', format='eps', dpi=1000, figsize=(30, 10))
-		
-	# 	# for p in missing_figs:
-	# 	# 	p[2].savefig(FIGURES_DIR + p[0] + '_' + p[1] + '.eps', format='eps', dpi=1000, figsize=(30, 10))
-
-	# 	# for p in speed_figs:
-	# 	# 	p[2].savefig(FIGURES_DIR + p[0] + '_' + p[1] + '.eps', format='eps', dpi=1000, figsize=(30, 10))
-
-	# 	for p in server_mix_figs:
-	# 		p[2].savefig(FIGURES_DIR + p[0] + '_' + p[1] + '.eps', format='eps', dpi=1000, figsize=(30, 10))
-		
-
-
-	# 	for i in range(len(n_files)):
-	# 		current_log = []
-	# 		current_log.append(n_files[i])
-	# 		current_log.append(n_throughput[i])
-	# 		current_log.append(n_rate[i])
-	# 		current_log.append(n_reward[i])
-	# 		current_log.append(n_freezing[i])
-	# 		current_log.append(n_n_freezing[i])
-	# 		current_log.append(n_latency[i])
-	# 		current_log.append(n_switch[i])
-	# 		current_log.append(n_sync[i])
-	# 		current_log.append(n_starting_time[i])
-	# 		log_file.write(str(current_log) + '\n')
-	# 		current_log = []
-
-	# 	log_file.flush()
-
-	# 	log_file.write('\n')
 
 if __name__ == '__main__':
 	main()
