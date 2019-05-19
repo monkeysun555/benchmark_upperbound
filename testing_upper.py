@@ -6,8 +6,8 @@ import testing_server
 import load
 import math
 
-IF_SUBOPTI = 1
-IF_MULTIPLE = 1
+IF_SUBOPTI = 0
+IF_MULTIPLE = 0
 if IF_MULTIPLE == 1:
 	IF_SUBOPTI = 1
 # New bitrate setting, 6 actions, correspongding to 240p, 360p, 480p, 720p, 1080p and 1440p(2k)
@@ -26,7 +26,7 @@ CHUNK_IN_SEG = SEG_DURATION/CHUNK_DURATION
 CHUNK_SEG_RATIO = CHUNK_DURATION/SEG_DURATION
 
 # Initial buffer length on server side
-SERVER_START_UP_TH = 2000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
+SERVER_START_UP_TH = 4000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
 BUFFER_LENGTHS = [2000.0, 3000.0, 4000.0]
 # how user will start playing video (user buffer)
 USER_START_UP_TH = 2000.0
@@ -96,10 +96,13 @@ RATIO_HIGH_5 = 1.0			# This is the highest ratio between first chunk and the sum
 
 # bitrate number is 6, no bin
 
-DATA_DIR = '../bw_traces/'
+# DATA_DIR = '../bw_traces/'
+# TRACE_NAME = '70ms_loss0.5_m5.txt'
+# DATA_DIR = '../bw_traces_test/cooked_test_traces/'
+# TRACE_NAME = '85+-29ms_loss0.5_0_2.txt'
+DATA_DIR = '../new_traces/test_sim_traces/'
+TRACE_NAME = 'norway_bus_20'
 
-# TRACE_NAME = '../bw_traces/BKLYN_1.txt'
-TRACE_NAME = '70ms_loss0.5_m5.txt'
 # OPT_RESULT = './results/total_reward_and_seq_timing.txt'
 if IF_SUBOPTI:
 	# OPT_RESULT = './subopt_results/total_reward_and_seq_latency_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP) + '.txt'
@@ -107,7 +110,8 @@ if IF_SUBOPTI:
 	LOG_FILE = './sub_test_results/subupper'
 	# UPPER_DIR = './results'
 else:
-	OPT_RESULT = './results/total_reward_and_seq_latency_'+ str(SERVER_START_UP_TH/MS_IN_S)+'.txt'
+	# OPT_RESULT = './results/total_reward_and_seq_latency_'+ str(SERVER_START_UP_TH/MS_IN_S)+'.txt'
+	OPT_RESULT = './results/paper_norway_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_2.txt'
 	SUMMARY_DIR = './test_results'
 	LOG_FILE = './test_results/upper'
 # TRAIN_TRACES = './traces/bandwidth/'
@@ -199,7 +203,6 @@ def m_main():
 				np.random.seed(RANDOM_SEED)
 
 				cooked_time, cooked_bw = load.load_single_trace(DATA_DIR + TRACE_NAME)
-
 				player = live_player.Live_Player(time_trace=cooked_time, throughput_trace=cooked_bw, 
 											seg_duration=SEG_DURATION, chunk_duration=CHUNK_DURATION,
 											start_up_th=USER_START_UP_TH, freezing_tol=USER_FREEZING_TOL, latency_tol = USER_FREEZING_TOL + b_l,
@@ -412,7 +415,8 @@ def main():
 	if not os.path.exists(SUMMARY_DIR):
 		os.makedirs(SUMMARY_DIR)
 
-	cooked_time, cooked_bw = load.load_single_trace(DATA_DIR + TRACE_NAME)
+	# cooked_time, cooked_bw = load.load_single_trace(DATA_DIR + TRACE_NAME)
+	cooked_time, cooked_bw = load.new_load_single_trace(DATA_DIR + TRACE_NAME)
 
 	player = live_player.Live_Player(time_trace=cooked_time, throughput_trace=cooked_bw, 
 										seg_duration=SEG_DURATION, chunk_duration=CHUNK_DURATION,
@@ -427,8 +431,10 @@ def main():
 		log_path = LOG_FILE + '_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP)
 	else:
 		log_path = LOG_FILE + '_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
+		paper_log = LOG_FILE + '_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
+		# paper_log = LOG_FILE + '_paper+-_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
 	log_file = open(log_path, 'wb')
-
+	all_testing_log = open(paper_log, 'wb')
 	upper_actions = []
 	with open(OPT_RESULT, 'rb') as f:
 		for line in f:
@@ -441,6 +447,10 @@ def main():
 	starting_time_idx = player.get_time_idx()
 	buffer_length = 0.0
 	r_batch = []
+	f_batch = []
+	a_batch = []
+	c_batch = []
+	l_batch = []
 	last_bit_rate = -1
 	action_reward = 0.0				# Total reward is for all chunks within on segment
 	action_freezing = 0.0
@@ -478,7 +488,6 @@ def main():
 			take_action = 0
 			action_freezing += freezing
 			buffer_length = player.get_buffer_length()
-
 			server_time = server.update(download_duration)
 			if not time_out:
 				# server.chunks.pop(0)
@@ -493,7 +502,8 @@ def main():
 				sync = 1
 			# Disable sync for current situation
 			if sync:
-				break	# No resync here
+				print "Sync happen"
+				# break	# No resync here
 				# To sync player, enter start up phase, buffer becomes zero
 				sync_time, missing_count = server.sync_encoding_buffer()
 				player.sync_playing(sync_time)
@@ -550,12 +560,17 @@ def main():
 				# Record state and get reward
 				if sync:
 					# Process sync
-					pass
+					print "Sync happen"
+					break
 				else:
 					take_action = 1
 					# last_bit_rate = bit_rate
 					# print(action_reward)
 					r_batch.append(action_reward)
+					f_batch.append(action_freezing)
+					a_batch.append(BITRATE[bit_rate])
+					l_batch.append(latency)
+					c_batch.append(np.abs(BITRATE[bit_rate] - BITRATE[last_bit_rate]))
 					log_file.write(	str(server.get_time()) + '\t' +
 								    str(BITRATE[bit_rate]) + '\t' +
 									str(buffer_length) + '\t' +
@@ -570,6 +585,7 @@ def main():
 									# str(action_reward) + '\n')
 									str(reward) + '\n')
 					log_file.flush()
+					print action_freezing
 					action_reward = 0.0
 					action_freezing = 0.0
 					break
@@ -595,6 +611,15 @@ def main():
 	log_file.write('\n' + str(starting_time))
 	log_file.write('\n')
 	log_file.close()
+
+	all_testing_log.write('norway_bus_20' + '\t')
+	all_testing_log.write(str(np.sum(r_batch)) + '\t')
+	all_testing_log.write(str(np.mean(a_batch)) + '\t')
+	all_testing_log.write(str(np.sum(f_batch)) + '\t')
+	all_testing_log.write(str(np.mean(c_batch)) + '\t')
+	all_testing_log.write(str(np.mean(l_batch)) + '\t')
+	all_testing_log.write('\n')
+	all_testing_log.close()
 
 if __name__ == '__main__':
 	if not IF_MULTIPLE:
