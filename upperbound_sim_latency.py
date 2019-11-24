@@ -24,7 +24,7 @@ CHUNK_IN_SEG = SEG_DURATION/CHUNK_DURATION
 CHUNK_SEG_RATIO = CHUNK_DURATION/SEG_DURATION
 
 # Initial buffer length on server side
-SERVER_START_UP_TH = 2000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
+SERVER_START_UP_TH = 3000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
 # how user will start playing video (user buffer)
 USER_START_UP_TH = 2000.0
 # set a target latency, then use fast playing to compensate
@@ -96,8 +96,8 @@ SUMMARY_DIR = './results'
 LOG_FILE = './results/log'
 # TRACE_NAME = '../bw_traces/BKLYN_1.txt'
 # TRACE_NAME = '../bw_traces/70ms_loss0.5_m5.txt'
-# TRACE_NAME = '../new_traces/test_sim_traces/norway_bus_20'
-TRACE_NAME = '../bw_traces_test/cooked_test_traces/85+-29ms_loss0.5_0_2.txt'
+TRACE_NAME = '../new_traces/test_sim_traces/norway_bus_20'
+# TRACE_NAME = '../bw_traces_test/cooked_test_traces/85+-29ms_loss0.5_0_2.txt'
 
 
 
@@ -116,8 +116,8 @@ def main():
 		os.makedirs(SUMMARY_DIR)
 	# Initial server and player
 
-	# cooked_time, cooked_bw = load.new_load_single_trace(TRACE_NAME)
-	cooked_time, cooked_bw = load.load_single_trace(TRACE_NAME)
+	cooked_time, cooked_bw = load.new_load_single_trace(TRACE_NAME)
+	# cooked_time, cooked_bw = load.load_single_trace(TRACE_NAME)
 
 	player = live_player.Live_Player(time_trace=cooked_time, throughput_trace=cooked_bw, 
 										seg_duration=SEG_DURATION, chunk_duration=CHUNK_DURATION,
@@ -330,7 +330,7 @@ def main():
 			max_seq = r_table_pre[value[0]][value[1]][value[2]][1]
 	print "Max reward is: ", max_reward
 	print "Max sequence is: ", max_seq
-	np.savetxt('./results/paper_80+-29ms_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt', max_seq, fmt='%1.2f')
+	np.savetxt('./results/paper_norway_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt', max_seq, fmt='%1.2f')
 
 if __name__ == '__main__':
 	main()
