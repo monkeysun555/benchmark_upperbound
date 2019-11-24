@@ -50,9 +50,10 @@ def plt_fig_mix_bw_action(tp_trace, bitrates):
 	
 	plt.plot(range(1,len(tp_trace)+1), tp_trace*KB_IN_MB, color='k', linewidth=1.5,alpha=0.9)
 
-	plt.legend(('Buffer Length(' + r'$\alpha$' + '=2'+ r'$\Delta$' + ')', \
-		'Buffer Length(' + r'$\alpha$' + '=3'+ r'$\Delta$' + ')', \
-		'Buffer Length(' + r'$\alpha$' + '=4'+ r'$\Delta$' + ')'), loc='upper center', fontsize=20, ncol=4, borderpad=0.25, frameon=False)
+	plt.legend(('Buffer Length(' + r'$\alpha$' + '=2)', \
+		'Buffer Length(' + r'$\alpha$' + '=3)', \
+		'Buffer Length(' + r'$\alpha$' + '=4)',\
+		'Bandwidth'), loc='upper center', fontsize=24, ncol=4, borderpad=0.25, frameon=False)
 
 	plt.grid(linestyle='dashed', axis='y',linewidth=0.5, color='gray')
 	plt.axis([0, int(len(tp_trace)/SEG_DURATION*MS_IN_S), y_axis_lower, y_axis_upper])
@@ -155,10 +156,10 @@ def plt_buffer_mix(time_traces, buffer_traces, state_traces, latency_traces, dat
 		plt.plot(latency_times[i], latency_traces[i], types[1], color=colors[i], linewidth=3, alpha=0.9)
 		# plt.plot([latency_time[0], latency_time[-1]], [starting_time/MS_IN_S]*2, 'r--', linewidth=1.5,alpha=0.9)
 	
-	plt.legend(('Buffer Length(' + r'$\alpha$' + '=2'+ r'$\Delta$' + ')' , r'Latency (' + r'$\alpha$' + '=2'+ r'$\Delta$'+ ')', \
-				'Buffer Length(' + r'$\alpha$' + '=3'+ r'$\Delta$' + ')' , r'Latency (' + r'$\alpha$' + '=3'+ r'$\Delta$'+ ')', \
-				'Buffer Length(' + r'$\alpha$' + '=4'+ r'$\Delta$' + ')' , r'Latency (' + r'$\alpha$' + '=4'+ r'$\Delta$'+ ')'), \
-				loc='upper center',fontsize=20 ,ncol=3, borderpad=0.25, frameon=False)
+	plt.legend(('Buffer Length(' + r'$\alpha$' + '=2)', r'Latency (' + r'$\alpha$' + '=2)', \
+				'Buffer Length(' + r'$\alpha$' + '=3)', r'Latency (' + r'$\alpha$' + '=3)', \
+				'Buffer Length(' + r'$\alpha$' + '=4)', r'Latency (' + r'$\alpha$' + '=4)'), \
+				loc='upper center',fontsize=24 ,ncol=3, borderpad=0.25, frameon=False)
 	# plt.grid(linestyle='dashed', axis='y',linewidth=0.5, color='gray')
 	plt.axis([0, plt_time_traces[-1][-1], 0, y_axis_upper])
 	plt.xticks(np.arange(0, plt_time_traces[-1][-1]+1, 50))

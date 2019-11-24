@@ -6,6 +6,8 @@ import testing_server
 import load
 import math
 import filenames as fns
+import matplotlib as mpl 
+import matplotlib.pyplot as plt 
 
 BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
 MAKEUP = 0.0
@@ -94,6 +96,31 @@ LOG_FILE = SUMMARY_DIR + 'ave_upper'
 
 SIMULATION_RESULTS = './new_ave_total_rewards/plot_all_data.txt'
 
+def box_plt(buffer_curves):
+	# Transform data
+	# print buffer_curves
+	buffer_boxes = []
+	for i in range(len(buffer_curves)):
+		# For each buffer curve
+		boxes = []
+		for j in range(len(LH_STEPS)):
+			boxes.append([curve[j] for curve in buffer_curves[i]])
+		buffer_boxes.append(boxes)
+
+
+	p = plt.figure(figsize=(7,5.5))
+
+	for box in buffer_boxes:
+		plt.boxplot(box)
+
+	plt.axis([0, 6 , 0, 1])
+
+	p.show()
+	raw_input()
+
+
+
+
 def collect_results():
 	matlab_plot_ratios = SUMMARY_DIR + 'matlab_plot.txt'
 	matlab_log = open(matlab_plot_ratios, 'wb')
@@ -106,6 +133,7 @@ def collect_results():
 	# print results
 	final_curves = []
 	for i in range(len(TYPES)):
+		boxplot_curves = []
 		for j in range(len(BUFFER_LENGTHS)):
 			final_curve = []
 			final_curve.append(str(TYPES[i]))
@@ -125,11 +153,11 @@ def collect_results():
 						ratio = (curr_reward+MAKEUP)/(optimal_reward+MAKEUP)
 					else:
 						ratio = curr_reward/optimal_reward
-					print ratio
+					# print ratio
 					file_curve.append(ratio)
 				file_curves.append(file_curve)
 			assert len(file_curves) == NUM_TRACES
-
+			boxplot_curves.append(file_curves)
 			ave_ratio = []
 			for h in range(len(LH_STEPS)):
 				ave_ratio.append(np.mean([curve[h] for curve in file_curves]))
@@ -137,6 +165,8 @@ def collect_results():
 			final_curve.extend([str(rs) for rs in ave_ratio])
 			final_curves.append(final_curve)
 			matlab_log.write('\n')
+		if i == 0:
+			p = box_plt(boxplot_curves)
 	matlab_log.close()
 
 def lat_penalty(x):
@@ -404,7 +434,7 @@ def main():
 
 					time_duration = server.get_time() - starting_time
 					tp_record = record_tp(player.get_throughput_trace(), starting_time_idx, time_duration) 
-					print(starting_time_idx, ave_file, len(player.get_throughput_trace()), player.get_time_idx(), len(tp_record), np.sum(r_batch))
+					# print(starting_time_idx, ave_file, len(player.get_throughput_trace()), player.get_time_idx(), len(tp_record), np.sum(r_batch))
 					end_log_file.write('type: ' + str(t) + ' buffer: ' + str(b_l) + ' step: ' + str(lh_l) + ' file: ' + str(file_idx) + ' rewards: ' + str(np.round(np.sum(r_batch), 3)))
 					end_log_file.write('\n')
 					log_file.write('\t'.join(str(tp) for tp in tp_record))
@@ -424,3 +454,6 @@ if __name__ == '__main__':
 		main()
 
 	collect_results()
+
+
+	

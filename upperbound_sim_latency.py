@@ -43,7 +43,7 @@ if TYPE == 1:
 	LONG_DELAY_PENALTY_BASE = 1.2	# for second
 	MISSING_PENALTY = 6.0	* CHUNK_SEG_RATIO 		# not included
 
-elif TYPE == 2:			# Sensitive to latency
+elif TYPE == 2:			# Sensitive to freeze
 	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
 	SMOOTH_PENALTY = 1.0
@@ -53,7 +53,7 @@ elif TYPE == 2:			# Sensitive to latency
 	CONST = 6.0
 	X_RATIO = 1.0
 
-elif TYPE == 3:			# Sensitive to bitrate
+elif TYPE == 3:			# Rate preferred
 	ACTION_REWARD = 2.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
 	SMOOTH_PENALTY = 1.0
@@ -63,7 +63,7 @@ elif TYPE == 3:			# Sensitive to bitrate
 	CONST = 6.0
 	X_RATIO = 1.0
 
-elif TYPE == 4:			# Sensitive to bitrate
+elif TYPE == 4:			# Sensitive to change
 	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
 	SMOOTH_PENALTY = 1.5
