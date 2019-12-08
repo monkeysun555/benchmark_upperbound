@@ -54,15 +54,14 @@ BUFFER_MAX = USER_LATENCY_TOL/MS_IN_S
 BUFFER_BIN = 0.05
 
 RATIO_LOW_2 = 2.0				# This is the lowest ratio between first chunk and the sum of all others
-RATIO_HIGH_2 = 10.0			# This is the highest ratio between first chunk and the sum of all others
+RATIO_HIGH_2 = 10.0				# This is the highest ratio between first chunk and the sum of all others
 RATIO_LOW_5 = 0.75				# This is the lowest ratio between first chunk and the sum of all others
-RATIO_HIGH_5 = 1.0			# This is the highest ratio between first chunk and the sum of all others
+RATIO_HIGH_5 = 1.0				# This is the highest ratio between first chunk and the sum of all others
 
 # bitrate number is 6, no bin
 
 DATA_DIR = '../bw_traces/'
 SUMMARY_DIR = './multi_subopt_results/'
-
 
 def ReLU(x):
 	return x * (x > 0)
@@ -77,7 +76,7 @@ def find_subopt(file_num, server_start_up, lookahead, curr_dir, temp_type):
 		ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO
 		REBUF_PENALTY = 6.0		# for second
 		SMOOTH_PENALTY = 1.0
-		LONG_DELAY_PENALTY = 5.0 * CHUNK_SEG_RATIO 
+		LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
 		LONG_DELAY_PENALTY_BASE = 1.2	# for second
 		MISSING_PENALTY = 6.0	* CHUNK_SEG_RATIO 		# not included
 
@@ -86,30 +85,30 @@ def find_subopt(file_num, server_start_up, lookahead, curr_dir, temp_type):
 		REBUF_PENALTY = 6.0		# for second
 		SMOOTH_PENALTY = 1.0
 		# LONG_DELAY_PENALTY_BASE = 1.2	# for second
-		MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 		# not included
 		LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
 		CONST = 6.0
 		X_RATIO = 1.0
+		MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 		# not included
 
 	elif temp_type == 3:			# Sensitive to bitrate
 		ACTION_REWARD = 2.0 * CHUNK_SEG_RATIO	
 		REBUF_PENALTY = 6.0		# for second
 		SMOOTH_PENALTY = 1.0
 		# LONG_DELAY_PENALTY_BASE = 1.2	# for second
-		MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 		LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
 		CONST = 6.0
 		X_RATIO = 1.0
+		MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 
 	elif temp_type == 4:			# Sensitive to bitrate
 		ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 		REBUF_PENALTY = 6.0		# for second
 		SMOOTH_PENALTY = 1.5
 		# LONG_DELAY_PENALTY_BASE = 1.2	# for second
-		MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 		LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
 		CONST = 6.0
 		X_RATIO = 1.0
+		MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 
 	# Initial server and player
 	file_name = fns.find_file(file_num)
@@ -150,7 +149,7 @@ def find_subopt(file_num, server_start_up, lookahead, curr_dir, temp_type):
 
 	for seg_idx in range(TEST_DURATION):
 		# Here generate several values shared by same 
-		print "Current seg_idx is:", seg_idx, 'in type:', temp_type, 'buffer len:', server_start_up, 'lookahead', lookahead, 'process(#file):', file_num 
+		print("Current seg_idx is:", seg_idx, 'in type:', temp_type, 'buffer len:', server_start_up, 'lookahead', lookahead, 'process(#file):', file_num)
 		if CHUNK_IN_SEG == 5:
 			ratio = np.random.uniform(RATIO_LOW_5, RATIO_HIGH_5)
 		else:
@@ -166,7 +165,7 @@ def find_subopt(file_num, server_start_up, lookahead, curr_dir, temp_type):
 				ratio = np.random.uniform(RATIO_LOW_2, RATIO_HIGH_2)
 
 			if not len(pre_value_idx):
-				print "After pruning, there is no value left"
+				print("After pruning, there is no value left")
 				assert 0 == 1
 
 			for idx in range(len(pre_value_idx)):
@@ -193,11 +192,11 @@ def find_subopt(file_num, server_start_up, lookahead, curr_dir, temp_type):
 					temp_last_bit_rate = last_bit_rate
 					# print "bit rate: " + str(bit_rate)
 					if not np.round(playing_time, 4) == np.round((seg_idx + step) * SEG_DURATION - buffer_length - buffer_shift, 4):
-						print "Not equal during lookahead"
-						print playing_time
-						print SEG_DURATION*(seg_idx+step)
-						print buffer_length
-						print buffer_shift
+						print("Not equal during lookahead")
+						print(playing_time)
+						print(SEG_DURATION*(seg_idx+step))
+						print(buffer_length)
+						print(buffer_shift)
 					server_timing = playing_time + latency + latency_shift
 					player_timing = server_timing - initial_delay
 					# print "playing time: ", playing_time
@@ -313,7 +312,7 @@ def find_subopt(file_num, server_start_up, lookahead, curr_dir, temp_type):
 								# print "Current playing time: ", temp_playing_time
 								# print "after quantize: ", action_reward, player.get_playing_time(), int(np.round(player.get_real_time()/MS_IN_S/TIMING_BIN)), int(np.round(temp_buffer_length/MS_IN_S/BUFFER_BIN)) 
 								if round_buffer_length > temp_buffer_max/BUFFER_BIN or round_latency > temp_latency_max/LATENCY_BIN:
-									print "Exceed limit, discard!"
+									print("Exceed limit, discard!")
 									break
 								temp_seq = seq[:]
 								temp_seq.append(bit_rate)
@@ -375,11 +374,11 @@ def find_subopt(file_num, server_start_up, lookahead, curr_dir, temp_type):
 		temp_last_bit_rate = last_bit_rate
 
 		if not np.round(playing_time, 4) == np.round(seg_idx * SEG_DURATION - buffer_length - buffer_shift, 4):
-			print "Not equal during lookahead"
-			print playing_time
-			print SEG_DURATION*(seg_idx+step)
-			print buffer_length
-			print buffer_shift
+			print("Not equal during lookahead")
+			print(playing_time)
+			print(SEG_DURATION*(seg_idx+step))
+			print(buffer_length)
+			print(buffer_shift)
 		server_timing = playing_time + latency + latency_shift		# Get server real time
 		player_timing = server_timing - initial_delay					# Get player real time
 		# print "playing time: ", playing_time
@@ -487,7 +486,7 @@ def find_subopt(file_num, server_start_up, lookahead, curr_dir, temp_type):
 					assert np.round(temp_playing_time + round_buffer_length * BUFFER_BIN * MS_IN_S + temp_buffer_shift, 3) == np.round((seg_idx +1) * SEG_DURATION , 3)
 					# print "after quantize: ", action_reward, player.get_playing_time(), int(np.round(player.get_real_time()/MS_IN_S/TIMING_BIN)), int(np.round(temp_buffer_length/MS_IN_S/BUFFER_BIN)) 
 					if round_buffer_length > temp_buffer_max/BUFFER_BIN or round_latency > temp_latency_max/LATENCY_BIN:
-						print "Exceed limit, discard!"
+						print("Exceed limit, discard!")
 						break
 					temp_seq = seq[:]
 					temp_seq.append(sub_bit_rate)
@@ -499,8 +498,8 @@ def find_subopt(file_num, server_start_up, lookahead, curr_dir, temp_type):
 
 	max_reward = r_table_pre[0][0]
 	max_seq = r_table_pre[0][1]
-	print "Max reward is: ", max_reward
-	print "Max sequence is: ", max_seq
+	print("Max reward is: ", max_reward)
+	print("Max sequence is: ", max_seq)
 	np.savetxt(curr_dir + 'buffer_' + str(server_start_up/MS_IN_S) + '_lh_' + str(lookahead) + '_file_' + str(file_num) + '.txt', max_seq, fmt='%1.2f')
 
 def main():
@@ -515,24 +514,18 @@ def main():
 		if not os.path.exists(curr_dir):
 			os.makedirs(curr_dir)
 		for buffer_len in BUFFERS:
-
 			for lh_len in LH_STEPS:
 				# For each t/bf/lh combination, run 10 processes of different network env
-				
 				processes = []
 				for file_num in range(N_FILES):
-
 					processes.append(Process(target=find_subopt, args=(file_num, buffer_len, lh_len, curr_dir, t)))
 					processes[-1].start()
-
 				for process in processes:
 				# 	"""
 				# 	Waits for threads to complete before moving on with the main
 				# 	script.
 				# 	"""
 					process.join()
-
-
 	
 if __name__ == '__main__':
 	main()

@@ -118,9 +118,6 @@ def box_plt(buffer_curves):
 	p.show()
 	raw_input()
 
-
-
-
 def collect_results():
 	matlab_plot_ratios = SUMMARY_DIR + 'matlab_plot.txt'
 	matlab_log = open(matlab_plot_ratios, 'wb')
