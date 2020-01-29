@@ -8,6 +8,7 @@ import math
 
 # New bitrate setting, 6 actions, correspongding to 240p, 360p, 480p, 720p, 1080p and 1440p(2k)
 BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
+OLD = 0
 # BITRATE = [300.0, 6000.0]
 
 # BITRATE = [500.0, 2000.0, 5000.0, 8000.0, 12000.0]	# 5 actions
@@ -96,11 +97,13 @@ SUMMARY_DIR = './results'
 LOG_FILE = './results/log'
 # TRACE_NAME = '../bw_traces/BKLYN_1.txt'
 # TRACE_NAME = '../bw_traces/70ms_loss0.5_m5.txt'
-TRACE_NAME = '../new_traces/test_sim_traces/norway_bus_20'
-# TRACE_NAME = '../bw_traces_test/cooked_test_traces/85+-29ms_loss0.5_0_2.txt'
+if OLD:
+	TRACE_NAME = '../new_traces/test_sim_traces/norway_bus_20'
+else:
+	TRACE_NAME = '../bw_traces_test/cooked_test_traces/85+-29ms_loss0.5_0_2.txt'
 
 
-
+SAVE_TRACE = TRACE_NAME.split('/')[-1]
 # TRAIN_TRACES = './traces/bandwidth/'
 
 def ReLU(x):
@@ -115,9 +118,10 @@ def main():
 	if not os.path.exists(SUMMARY_DIR):
 		os.makedirs(SUMMARY_DIR)
 	# Initial server and player
-
-	cooked_time, cooked_bw = load.new_load_single_trace(TRACE_NAME)
-	# cooked_time, cooked_bw = load.load_single_trace(TRACE_NAME)
+	if OLD:
+		cooked_time, cooked_bw = load.new_load_single_trace(TRACE_NAME)
+	else:
+		cooked_time, cooked_bw = load.load_single_trace(TRACE_NAME)
 
 	player = live_player.Live_Player(time_trace=cooked_time, throughput_trace=cooked_bw, 
 										seg_duration=SEG_DURATION, chunk_duration=CHUNK_DURATION,
@@ -148,7 +152,7 @@ def main():
 
 	for seg_idx in range(TEST_DURATION):
 		# Here generate several values shared by same 
-		print "Current seg_idx is: ", seg_idx
+		print("Current seg_idx is: ", seg_idx)
 		if CHUNK_IN_SEG == 5:
 			ratio = np.random.uniform(RATIO_LOW_5, RATIO_HIGH_5)
 		else:
@@ -176,11 +180,11 @@ def main():
 				temp_last_bit_rate = last_bit_rate
 				# print "bit rate: " + str(bit_rate)
 				if not np.round(playing_time, 4) == np.round(seg_idx * SEG_DURATION - buffer_length - buffer_shift, 4):
-					print "Not equal"
-					print np.round(playing_time, 4)
-					print seg_idx * SEG_DURATION
-					print np.round(buffer_length, 4)
-					print np.round(buffer_shift, 4)
+					print("Not equal")
+					print(np.round(playing_time, 4))
+					print(seg_idx * SEG_DURATION)
+					print(np.round(buffer_length, 4))
+					print(np.round(buffer_shift, 4))
 				server_timing = playing_time + latency + latency_shift
 				player_timing = server_timing - initial_delay
 				# print "playing time: ", playing_time
@@ -295,7 +299,7 @@ def main():
 							# print "Current playing time: ", temp_playing_time
 							# print "after quantize: ", action_reward, player.get_playing_time(), int(np.round(player.get_real_time()/MS_IN_S/TIMING_BIN)), int(np.round(temp_buffer_length/MS_IN_S/BUFFER_BIN)) 
 							if round_buffer_length > BUFFER_MAX/BUFFER_BIN or round_latency > LATENCY_MAX/LATENCY_BIN:
-								print "Exceed limit, discard!"
+								print("Exceed limit, discard!")
 								break
 							temp_seq = seq[:]
 							temp_seq.append(bit_rate)
@@ -328,9 +332,9 @@ def main():
 		if r_table_pre[value[0]][value[1]][value[2]][0] > max_reward:
 			max_reward = r_table_pre[value[0]][value[1]][value[2]][0]
 			max_seq = r_table_pre[value[0]][value[1]][value[2]][1]
-	print "Max reward is: ", max_reward
-	print "Max sequence is: ", max_seq
-	np.savetxt('./results/paper_norway_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt', max_seq, fmt='%1.2f')
+	print("Max reward is: ", max_reward)
+	print("Max sequence is: ", max_seq)
+	np.savetxt('./results/paper' + SAVE_TRACE + '_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt', max_seq, fmt='%1.2f')
 
 if __name__ == '__main__':
 	main()
