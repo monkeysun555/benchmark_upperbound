@@ -100,7 +100,7 @@ LOG_FILE = './results/log'
 if OLD:
 	TRACE_NAME = '../new_traces/test_sim_traces/norway_bus_20'
 else:
-	TRACE_NAME = '../bw_traces_test/cooked_test_traces/85+-29ms_loss0.5_0_2.txt'
+	TRACE_NAME = '../bw_traces_test/cooked_test_traces/70+-24ms_loss1_2_1.txt'
 
 
 SAVE_TRACE = TRACE_NAME.split('/')[-1]
