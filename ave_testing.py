@@ -1,3 +1,5 @@
+# Collect info about different QoE and lookahead 
+# Then plot box (not used)
 import os
 import logging
 import numpy as np
@@ -53,30 +55,30 @@ elif TYPE == 2:			# Sensitive to latency
 	REBUF_PENALTY = 6.0		# for second
 	SMOOTH_PENALTY = 1.0
 	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
-	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 		# not included
 	LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
 	CONST = 6.0
 	X_RATIO = 1.0
+	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 		# not included
 
 elif TYPE == 3:			# Sensitive to bitrate
 	ACTION_REWARD = 2.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
 	SMOOTH_PENALTY = 1.0
 	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
-	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 	LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
 	CONST = 6.0
 	X_RATIO = 1.0
+	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 
 elif TYPE == 4:			# Sensitive to bitrate
 	ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 	REBUF_PENALTY = 6.0		# for second
 	SMOOTH_PENALTY = 1.5
 	# LONG_DELAY_PENALTY_BASE = 1.2	# for second
-	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 	LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
 	CONST = 6.0
 	X_RATIO = 1.0
+	MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 
 TEST_DURATION = 100				# Number of testing <===================== Change length here
 TIMING_MAX = TEST_DURATION*SEG_DURATION/MS_IN_S + 10.0
@@ -85,9 +87,9 @@ BUFFER_MAX = USER_LATENCY_TOL/MS_IN_S
 BUFFER_BIN = 0.05
 
 RATIO_LOW_2 = 2.0				# This is the lowest ratio between first chunk and the sum of all others
-RATIO_HIGH_2 = 10.0			# This is the highest ratio between first chunk and the sum of all others
+RATIO_HIGH_2 = 10.0				# This is the highest ratio between first chunk and the sum of all others
 RATIO_LOW_5 = 0.75				# This is the lowest ratio between first chunk and the sum of all others
-RATIO_HIGH_5 = 1.0			# This is the highest ratio between first chunk and the sum of all others
+RATIO_HIGH_5 = 1.0				# This is the highest ratio between first chunk and the sum of all others
 
 DATA_DIR = '../bw_traces/'
 
@@ -106,15 +108,10 @@ def box_plt(buffer_curves):
 		for j in range(len(LH_STEPS)):
 			boxes.append([curve[j] for curve in buffer_curves[i]])
 		buffer_boxes.append(boxes)
-
-
 	p = plt.figure(figsize=(7,5.5))
-
 	for box in buffer_boxes:
 		plt.boxplot(box)
-
 	plt.axis([0, 6 , 0, 1])
-
 	p.show()
 	raw_input()
 

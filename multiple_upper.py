@@ -1,3 +1,4 @@
+# This file is to generate optimal results for 8 bw traces for 3 QoE weight settings
 import os
 import logging
 import numpy as np
@@ -7,11 +8,9 @@ import load
 import math 
 from multiprocessing import Lock, Process, Manager
 import filenames as fns
-
 # New bitrate setting, 6 actions, correspongding to 240p, 360p, 480p, 720p, 1080p and 1440p(2k)
 BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
 # BITRATE = [300.0, 6000.0]
-
 # BITRATE = [500.0, 2000.0, 5000.0, 8000.0, 12000.0]	# 5 actions
 
 RANDOM_SEED = 13
@@ -44,7 +43,6 @@ N_FILES = 8
 # FAST_PLAYING = 1.1		# For 1
 # NORMAL_PLAYING = 1.0	# For 0
 # SLOW_PLAYING = 0.9		# For -1
-
 TEST_DURATION = 100				# Number of testing <===================== Change length here
 LATENCY_MAX = USER_LATENCY_TOL/MS_IN_S
 LATENCY_BIN = 0.05
@@ -52,22 +50,20 @@ BUFFER_MAX = USER_LATENCY_TOL/MS_IN_S
 BUFFER_BIN = 0.05
 
 RATIO_LOW_2 = 2.0				# This is the lowest ratio between first chunk and the sum of all others
-RATIO_HIGH_2 = 10.0			# This is the highest ratio between first chunk and the sum of all others
+RATIO_HIGH_2 = 10.0				# This is the highest ratio between first chunk and the sum of all others
 RATIO_LOW_5 = 0.75				# This is the lowest ratio between first chunk and the sum of all others
-RATIO_HIGH_5 = 1.0			# This is the highest ratio between first chunk and the sum of all others
+RATIO_HIGH_5 = 1.0				# This is the highest ratio between first chunk and the sum of all others
 
 # bitrate number is 6, no bin
 
 DATA_DIR = '../bw_traces/'
 SUMMARY_DIR = './multi_results/'
 
-
 def ReLU(x):
 	return x * (x > 0)
 
 def lat_penalty(x, const, x_ratio):
 	return 1.0/(1+math.exp(const-x_ratio*x)) - 1.0/(1+math.exp(const))
-
 
 def find_upper(file_num, server_start_up, curr_dir, temp_type):
 
@@ -84,30 +80,30 @@ def find_upper(file_num, server_start_up, curr_dir, temp_type):
 		REBUF_PENALTY = 6.0		# for second
 		SMOOTH_PENALTY = 1.0
 		# LONG_DELAY_PENALTY_BASE = 1.2	# for second
-		MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 		# not included
 		LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
 		CONST = 6.0
 		X_RATIO = 1.0
+		MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 		# not included
 
 	elif temp_type == 3:			# Sensitive to bitrate
 		ACTION_REWARD = 2.0 * CHUNK_SEG_RATIO	
 		REBUF_PENALTY = 6.0		# for second
 		SMOOTH_PENALTY = 1.0
 		# LONG_DELAY_PENALTY_BASE = 1.2	# for second
-		MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 		LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
 		CONST = 6.0
 		X_RATIO = 1.0
+		MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 
 	elif temp_type == 4:			# Sensitive to bitrate
 		ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
 		REBUF_PENALTY = 6.0		# for second
 		SMOOTH_PENALTY = 1.5
 		# LONG_DELAY_PENALTY_BASE = 1.2	# for second
-		MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 		LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
 		CONST = 6.0
 		X_RATIO = 1.0
+		MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO 			# not included
 	# Init the global variable value
 	file_name = fns.find_file(file_num)
 	temp_trace = DATA_DIR + file_name

@@ -45,11 +45,8 @@ def plt_fig_mix_bw_action(tp_trace, bitrates):
 			y_value.append(bitrates[i][j*CHUNK_IN_SEG])
 			y_value.append(bitrates[i][j*CHUNK_IN_SEG])
 			curr_x += 1		# Plot in chunks
-
 		plt.plot(x_value, y_value, types[i], color=colors[i], linewidth=3, alpha=0.5)
-	
 	plt.plot(range(1,len(tp_trace)+1), tp_trace*KB_IN_MB, color='k', linewidth=1.5,alpha=0.9)
-
 	plt.legend(('Buffer Length(' + r'$\alpha$' + '=2)', \
 		'Buffer Length(' + r'$\alpha$' + '=3)', \
 		'Buffer Length(' + r'$\alpha$' + '=4)',\
@@ -63,10 +60,8 @@ def plt_fig_mix_bw_action(tp_trace, bitrates):
 	plt.ylabel('Bitrate (Mbps)', fontweight='bold', fontsize=22)
 	p.set_tight_layout(True)
 	plt.tick_params(labelsize=22)
-
 	plt.close()
 	return p
-
 
 def plt_buffer_mix(time_traces, buffer_traces, state_traces, latency_traces, data_type):
 	# y_axis_upper = np.ceil(np.max(latency_trace)*1.6/MS_IN_S)
@@ -173,9 +168,6 @@ def plt_buffer_mix(time_traces, buffer_traces, state_traces, latency_traces, dat
 
 	plt.close()
 	return p
-
-
-
 
 def main():
 	if not os.path.isdir(FIGURES_DIR):
