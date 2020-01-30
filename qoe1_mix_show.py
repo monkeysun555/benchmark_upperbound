@@ -5,10 +5,14 @@ import matplotlib as mpl
 # mpl.rcParams['text.usetex'] = True
 mpl.rcParams['text.latex.preview'] = True
 
-SERVER_START_UP_TH = 2000.0			#<=== change this to get corresponding log files
+# SERVER_START_UP_TH = 2000.0			#<=== change this to get corresponding log files
 BUFFER_LENGTHS = [2000.0, 3000.0, 4000.0]
 MS_IN_S = 1000.0
-RESULT_DIR = './sub_test_results/'
+USING_SINGLE_OPTIMAL_RUN = 1
+if USING_SINGLE_OPTIMAL_RUN:
+	RESULT_DIR = './test_results/'
+else:
+	RESULT_DIR = './sub_test_results/'
 FIGURES_DIR = './test_figures/'
 RESULT_FILE = './test_figures/'
 
@@ -22,7 +26,7 @@ SEG_DURATION = 1000.0
 CHUNK_DURATION = 200.0
 START_UP_TH = 2000.0
 
-CHUNK_IN_SEG = int(SEG_DURATION/CHUNK_DURATION)		# 4
+CHUNK_IN_SEG = int(SEG_DURATION/CHUNK_DURATION)		# 5
 
 def plt_fig_mix_bw_action(tp_trace, bitrates):
 	colors = ['dodgerblue','chocolate','forestgreen']
@@ -32,14 +36,14 @@ def plt_fig_mix_bw_action(tp_trace, bitrates):
 	# For negative reward
 	# y_axis_lower = np.floor(np.minimum(np.min(trace)*1.1,0.0))
 	y_axis_lower = 0.0
-	print len(tp_trace)
-	print len(bitrates[0])
+	print(len(tp_trace))
+	print(len(bitrates[0]))
 	p = plt.figure(figsize=(20,5))
 	for i in range(len(bitrates)):
 		x_value = []
 		y_value = []
 		curr_x = 0.0
-		for j in range(len(bitrates[i])/CHUNK_IN_SEG):
+		for j in range(len(bitrates[i])//CHUNK_IN_SEG):
 			x_value.append(curr_x)
 			x_value.append(curr_x+0.999)
 			y_value.append(bitrates[i][j*CHUNK_IN_SEG])
@@ -179,9 +183,12 @@ def main():
 	file_records = []
 	for buffer_length in BUFFER_LENGTHS:
 		file_info = []
-		file_path = RESULT_DIR + 'subupper_buff' + str(buffer_length) + '_type_2_step_-1.txt'
+		if USING_SINGLE_OPTIMAL_RUN:
+			file_path = RESULT_DIR + 'upper_buff' + str(buffer_length/MS_IN_S) + '_type_2'
+		else:
+			file_path = RESULT_DIR + 'subupper_buff' + str(buffer_length) + '_type_2_step_-1.txt'
 		file_info.append(buffer_length)
-		with open(file_path, 'rb') as f:
+		with open(file_path, 'r') as f:
 			for line in f:
 				parse = line.strip('\n')
 				parse = parse.split('\t')				
@@ -212,7 +219,7 @@ def main():
 	n_starting_time  = ['starting_time']
 
 	log_path = RESULT_FILE + 'table_upper'
-	log_file = open(log_path, 'wb')
+	log_file = open(log_path, 'w')
 
 	# Total plot infomations
 	names = []

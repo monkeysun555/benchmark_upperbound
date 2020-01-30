@@ -2,7 +2,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-SERVER_START_UP_TH = 2000.0			#<=== change this to get corresponding log files
+# SERVER_START_UP_TH = 2000.0			#<=== change this to get corresponding log files
 MS_IN_S = 1000.0
 RESULT_DIR = './test_results/'
 FIGURES_DIR = './test_figures/'
@@ -276,7 +276,7 @@ def main():
 		file_info = []
 		file_path = RESULT_DIR + data
 		file_info.append(data.split('.')[0])
-		with open(file_path, 'rb') as f:
+		with open(file_path, 'r') as f:
 			for line in f:
 				parse = line.strip('\n')
 				parse = parse.split('\t')				
@@ -308,7 +308,7 @@ def main():
 	n_starting_time  = ['starting_time']
 
 	log_path = RESULT_FILE + 'table_upper'
-	log_file = open(log_path, 'wb')
+	log_file = open(log_path, 'w')
 
 	for i in range(len(file_records)):
 		starting_time = float(file_records[i][-1][0])

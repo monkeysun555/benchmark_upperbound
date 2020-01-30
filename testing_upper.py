@@ -10,6 +10,7 @@ IF_SUBOPTI = 0
 IF_MULTIPLE = 0
 if IF_MULTIPLE == 1:
 	IF_SUBOPTI = 1
+OLD = 0
 # New bitrate setting, 6 actions, correspongding to 240p, 360p, 480p, 720p, 1080p and 1440p(2k)
 BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
 # BITRATE = [300.0, 6000.0]
@@ -26,7 +27,7 @@ CHUNK_IN_SEG = SEG_DURATION/CHUNK_DURATION
 CHUNK_SEG_RATIO = CHUNK_DURATION/SEG_DURATION
 
 # Initial buffer length on server side
-SERVER_START_UP_TH = 4000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
+SERVER_START_UP_TH = 2000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
 BUFFER_LENGTHS = [2000.0, 3000.0, 4000.0]
 # how user will start playing video (user buffer)
 USER_START_UP_TH = 2000.0
@@ -98,10 +99,13 @@ RATIO_HIGH_5 = 1.0			# This is the highest ratio between first chunk and the sum
 
 # DATA_DIR = '../bw_traces/'
 # TRACE_NAME = '70ms_loss0.5_m5.txt'
-# DATA_DIR = '../bw_traces_test/cooked_test_traces/'
-# TRACE_NAME = '85+-29ms_loss0.5_0_2.txt'
-DATA_DIR = '../new_traces/test_sim_traces/'
-TRACE_NAME = 'norway_bus_20'
+if OLD:
+	DATA_DIR = '../new_traces/test_sim_traces/'
+	TRACE_NAME = 'norway_bus_20'
+else:
+	DATA_DIR = '../bw_traces_test/cooked_test_traces/'
+	# TRACE_NAME = '85+-29ms_loss0.5_0_2.txt'
+	TRACE_NAME = '70+-24ms_loss1_2_1.txt'
 
 # OPT_RESULT = './results/total_reward_and_seq_timing.txt'
 if IF_SUBOPTI:
@@ -110,8 +114,11 @@ if IF_SUBOPTI:
 	LOG_FILE = './sub_test_results/subupper'
 	# UPPER_DIR = './results'
 else:
-	# OPT_RESULT = './results/total_reward_and_seq_latency_'+ str(SERVER_START_UP_TH/MS_IN_S)+'.txt'
-	OPT_RESULT = './results/paper_norway_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_2.txt'
+	if OLD:
+		# OPT_RESULT = './results/total_reward_and_seq_latency_'+ str(SERVER_START_UP_TH/MS_IN_S)+'.txt'
+		OPT_RESULT = './results/paper_norway_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_2.txt'
+	else:
+		OPT_RESULT = './results/paper70+-24ms_loss1_2_1.txt_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_2.txt'
 	SUMMARY_DIR = './test_results'
 	LOG_FILE = './test_results/upper'
 # TRAIN_TRACES = './traces/bandwidth/'
@@ -147,8 +154,8 @@ def m_main():
 	plot_rewards = []
 	total_path = './sub_test_results/plot_all_data.txt'
 	total_rate_opt_path_t2_f3 = './sub_test_results/t2_f3.txt'
-	end_log_file = open(total_path, 'wb')
-	t2_f3_file = open(total_rate_opt_path_t2_f3, 'wb')
+	end_log_file = open(total_path, 'w')
+	t2_f3_file = open(total_rate_opt_path_t2_f3, 'w')
 	for t in TYPES:
 		if t == 1:
 			ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO	
@@ -199,7 +206,7 @@ def m_main():
 					subopt_path = './results/total_reward_and_seq_latency_' + str(b_l/MS_IN_S) + '_type_' + str(t) + '.txt'
 				else:
 					subopt_path = './subopt_results/total_reward_and_seq_latency_' + str(b_l/MS_IN_S) + '_type_' + str(t) + '_step_' + str(lh_l) + '.txt'
-				print subopt_path
+				print(subopt_path)
 				np.random.seed(RANDOM_SEED)
 
 				cooked_time, cooked_bw = load.load_single_trace(DATA_DIR + TRACE_NAME)
@@ -212,12 +219,12 @@ def m_main():
 
 
 				initial_delay = server.get_time() - player.get_playing_time()	# This initial delay, cannot be reduced, all latency is calculated based on this
-				print initial_delay
+				print(initial_delay)
 				log_path = LOG_FILE + '_buff' + str(b_l) + '_type_' + str(t) + '_step_' + str(lh_l) + '.txt'
-				log_file = open(log_path, 'wb')
+				log_file = open(log_path, 'w')
 
 				upper_actions = []
-				with open(subopt_path, 'rb') as f:
+				with open(subopt_path, 'r') as f:
 					for line in f:
 						upper_actions.append(int(float(line.strip('\n'))))
 				upper_actions.pop(0)
@@ -234,7 +241,7 @@ def m_main():
 				rate_action_reward = 0.0
 				action_freezing = 0.0
 				for i in range(len(upper_actions)):
-					print "Current index: ", i
+					print("Current index: ", i)
 					if init: 
 						if CHUNK_IN_SEG == 5:
 							ratio = np.random.uniform(RATIO_LOW_5, RATIO_HIGH_5)
@@ -405,7 +412,7 @@ def m_main():
 			plot_rewards.append(curve_rewards)
 			t_rewards.append(bl_rewards)
 		all_rewards.append(t_rewards)
-	print all_rewards
+	print(all_rewards)
 	end_log_file.close()
 	# curves_show(plot_rewards)
 
@@ -415,8 +422,10 @@ def main():
 	if not os.path.exists(SUMMARY_DIR):
 		os.makedirs(SUMMARY_DIR)
 
-	# cooked_time, cooked_bw = load.load_single_trace(DATA_DIR + TRACE_NAME)
-	cooked_time, cooked_bw = load.new_load_single_trace(DATA_DIR + TRACE_NAME)
+	if not OLD:
+		cooked_time, cooked_bw = load.load_single_trace(DATA_DIR + TRACE_NAME)
+	else:
+		cooked_time, cooked_bw = load.new_load_single_trace(DATA_DIR + TRACE_NAME)
 
 	player = live_player.Live_Player(time_trace=cooked_time, throughput_trace=cooked_bw, 
 										seg_duration=SEG_DURATION, chunk_duration=CHUNK_DURATION,
@@ -426,17 +435,20 @@ def main():
 										start_up_th=SERVER_START_UP_TH, randomSeed=RANDOM_SEED)
 
 	initial_delay = server.get_time() - player.get_playing_time()	# This initial delay, cannot be reduced, all latency is calculated based on this
-	print initial_delay
+	print(initial_delay)
 	if IF_SUBOPTI:
 		log_path = LOG_FILE + '_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP)
 	else:
 		log_path = LOG_FILE + '_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
-		paper_log = LOG_FILE + '_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
-		# paper_log = LOG_FILE + '_paper+-_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
-	log_file = open(log_path, 'wb')
-	all_testing_log = open(paper_log, 'wb')
+		if OLD:
+			paper_log = LOG_FILE + '_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
+		else:
+			# paper_log = LOG_FILE + '_paper+-_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
+			paper_log = LOG_FILE + '_paper+-70ms_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
+	log_file = open(log_path, 'w')
+	all_testing_log = open(paper_log, 'w')
 	upper_actions = []
-	with open(OPT_RESULT, 'rb') as f:
+	with open(OPT_RESULT, 'r') as f:
 		for line in f:
 			upper_actions.append(int(float(line.strip('\n'))))
 	upper_actions.pop(0)
@@ -455,7 +467,7 @@ def main():
 	action_reward = 0.0				# Total reward is for all chunks within on segment
 	action_freezing = 0.0
 	for i in range(len(upper_actions)):
-		print "Current index: ", i
+		print("Current index: ", i)
 		if init: 
 			if CHUNK_IN_SEG == 5:
 				ratio = np.random.uniform(RATIO_LOW_5, RATIO_HIGH_5)
@@ -502,7 +514,7 @@ def main():
 				sync = 1
 			# Disable sync for current situation
 			if sync:
-				print "Sync happen"
+				print("Sync happen")
 				# break	# No resync here
 				# To sync player, enter start up phase, buffer becomes zero
 				sync_time, missing_count = server.sync_encoding_buffer()
@@ -560,7 +572,7 @@ def main():
 				# Record state and get reward
 				if sync:
 					# Process sync
-					print "Sync happen"
+					print("Sync happen")
 					break
 				else:
 					take_action = 1
@@ -585,7 +597,7 @@ def main():
 									# str(action_reward) + '\n')
 									str(reward) + '\n')
 					log_file.flush()
-					print action_freezing
+					print(action_freezing)
 					action_reward = 0.0
 					action_freezing = 0.0
 					break
