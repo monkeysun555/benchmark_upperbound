@@ -10,7 +10,7 @@ IF_SUBOPTI = 0
 IF_MULTIPLE = 0
 if IF_MULTIPLE == 1:
 	IF_SUBOPTI = 1
-OLD = 0
+NEW = 0
 # New bitrate setting, 6 actions, correspongding to 240p, 360p, 480p, 720p, 1080p and 1440p(2k)
 BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
 # BITRATE = [300.0, 6000.0]
@@ -99,7 +99,7 @@ RATIO_HIGH_5 = 1.0			# This is the highest ratio between first chunk and the sum
 
 # DATA_DIR = '../bw_traces/'
 # TRACE_NAME = '70ms_loss0.5_m5.txt'
-if OLD:
+if NEW:
 	DATA_DIR = '../new_traces/test_sim_traces/'
 	TRACE_NAME = 'norway_bus_20'
 else:
@@ -114,7 +114,7 @@ if IF_SUBOPTI:
 	LOG_FILE = './sub_test_results/subupper'
 	# UPPER_DIR = './results'
 else:
-	if OLD:
+	if NEW:
 		# OPT_RESULT = './results/total_reward_and_seq_latency_'+ str(SERVER_START_UP_TH/MS_IN_S)+'.txt'
 		OPT_RESULT = './results/paper_norway_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_2.txt'
 	else:
@@ -422,7 +422,7 @@ def main():
 	if not os.path.exists(SUMMARY_DIR):
 		os.makedirs(SUMMARY_DIR)
 
-	if not OLD:
+	if not NEW:
 		cooked_time, cooked_bw = load.load_single_trace(DATA_DIR + TRACE_NAME)
 	else:
 		cooked_time, cooked_bw = load.new_load_single_trace(DATA_DIR + TRACE_NAME)
@@ -440,7 +440,7 @@ def main():
 		log_path = LOG_FILE + '_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP)
 	else:
 		log_path = LOG_FILE + '_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
-		if OLD:
+		if NEW:
 			paper_log = LOG_FILE + '_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
 		else:
 			# paper_log = LOG_FILE + '_paper+-_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)

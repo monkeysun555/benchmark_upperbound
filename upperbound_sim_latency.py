@@ -8,7 +8,7 @@ import math
 
 # New bitrate setting, 6 actions, correspongding to 240p, 360p, 480p, 720p, 1080p and 1440p(2k)
 BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
-OLD = 0
+NEW = 1
 # BITRATE = [300.0, 6000.0]
 
 # BITRATE = [500.0, 2000.0, 5000.0, 8000.0, 12000.0]	# 5 actions
@@ -97,7 +97,7 @@ SUMMARY_DIR = './results'
 LOG_FILE = './results/log'
 # TRACE_NAME = '../bw_traces/BKLYN_1.txt'
 # TRACE_NAME = '../bw_traces/70ms_loss0.5_m5.txt'
-if OLD:
+if NEW:
 	TRACE_NAME = '../new_traces/test_sim_traces/norway_bus_6'
 else:
 	TRACE_NAME = '../bw_traces_test/cooked_test_traces/70+-24ms_loss1_2_1.txt'
@@ -118,7 +118,7 @@ def main():
 	if not os.path.exists(SUMMARY_DIR):
 		os.makedirs(SUMMARY_DIR)
 	# Initial server and player
-	if OLD:
+	if NEW:
 		cooked_time, cooked_bw = load.new_load_single_trace(TRACE_NAME)
 	else:
 		cooked_time, cooked_bw = load.load_single_trace(TRACE_NAME)
