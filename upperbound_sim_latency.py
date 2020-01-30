@@ -98,7 +98,7 @@ LOG_FILE = './results/log'
 # TRACE_NAME = '../bw_traces/BKLYN_1.txt'
 # TRACE_NAME = '../bw_traces/70ms_loss0.5_m5.txt'
 if OLD:
-	TRACE_NAME = '../new_traces/test_sim_traces/norway_bus_20'
+	TRACE_NAME = '../new_traces/test_sim_traces/norway_bus_6'
 else:
 	TRACE_NAME = '../bw_traces_test/cooked_test_traces/70+-24ms_loss1_2_1.txt'
 
