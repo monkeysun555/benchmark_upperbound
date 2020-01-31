@@ -10,7 +10,7 @@ IF_SUBOPTI = 0
 IF_MULTIPLE = 0
 if IF_MULTIPLE == 1:
 	IF_SUBOPTI = 1
-NEW = 0
+NEW = 1
 # New bitrate setting, 6 actions, correspongding to 240p, 360p, 480p, 720p, 1080p and 1440p(2k)
 BITRATE = [300.0, 500.0, 1000.0, 2000.0, 3000.0, 6000.0]
 # BITRATE = [300.0, 6000.0]
@@ -101,7 +101,7 @@ RATIO_HIGH_5 = 1.0			# This is the highest ratio between first chunk and the sum
 # TRACE_NAME = '70ms_loss0.5_m5.txt'
 if NEW:
 	DATA_DIR = '../new_traces/test_sim_traces/'
-	TRACE_NAME = 'norway_bus_20'
+	TRACE_NAME = 'norway_bus_6'
 else:
 	DATA_DIR = '../bw_traces_test/cooked_test_traces/'
 	# TRACE_NAME = '85+-29ms_loss0.5_0_2.txt'
@@ -116,7 +116,7 @@ if IF_SUBOPTI:
 else:
 	if NEW:
 		# OPT_RESULT = './results/total_reward_and_seq_latency_'+ str(SERVER_START_UP_TH/MS_IN_S)+'.txt'
-		OPT_RESULT = './results/paper_norway_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_2.txt'
+		OPT_RESULT = './results/papernorway_bus_6_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_2.txt'
 	else:
 		OPT_RESULT = './results/paper70+-24ms_loss1_2_1.txt_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_2.txt'
 	SUMMARY_DIR = './test_results'
@@ -144,7 +144,6 @@ def record_tp(tp_trace, starting_time_idx, duration):
 # 	for i in range(len(TYPES)):
 # 		for j in range(len(BUFFER_LENGTHS)):
 # 			curr_curve = sub_r[i*len(TYPES)+j]
-
 
 def m_main():
 	if not os.path.exists(SUMMARY_DIR):
@@ -437,14 +436,18 @@ def main():
 	initial_delay = server.get_time() - player.get_playing_time()	# This initial delay, cannot be reduced, all latency is calculated based on this
 	print(initial_delay)
 	if IF_SUBOPTI:
-		log_path = LOG_FILE + '_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP)
-	else:
-		log_path = LOG_FILE + '_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
 		if NEW:
-			paper_log = LOG_FILE + '_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
+			log_path = LOG_FILE + '_bus_6_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP) + '.txt'
 		else:
+			log_path = LOG_FILE + '+-70ms_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP) + '.txt'
+	else:
+		if NEW:
+			log_path = LOG_FILE + '_bus_6_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt'
+			paper_log = LOG_FILE + '_bus_6_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt'
+		else:
+			log_path = LOG_FILE + '+-70_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt'
 			# paper_log = LOG_FILE + '_paper+-_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
-			paper_log = LOG_FILE + '_paper+-70ms_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
+			paper_log = LOG_FILE + '_paper+-70ms_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)+ '.txt'
 	log_file = open(log_path, 'w')
 	all_testing_log = open(paper_log, 'w')
 	upper_actions = []
@@ -490,7 +493,7 @@ def main():
 			download_chunk_end_idx = download_chunk_info[2]
 			download_chunk_size = download_chunk_info[3][bit_rate]		# Might be several chunks
 			chunk_number = download_chunk_end_idx - download_chunk_idx + 1
-			assert download_seg_idx == i
+			# assert download_seg_idx == i
 			assert chunk_number == 1
 			server_wait_time = 0.0
 			sync = 0
@@ -624,7 +627,7 @@ def main():
 	log_file.write('\n')
 	log_file.close()
 
-	all_testing_log.write('norway_bus_20' + '\t')
+	all_testing_log.write('norway_bus_6' + '\t')
 	all_testing_log.write(str(np.sum(r_batch)) + '\t')
 	all_testing_log.write(str(np.mean(a_batch)) + '\t')
 	all_testing_log.write(str(np.sum(f_batch)) + '\t')

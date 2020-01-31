@@ -51,7 +51,7 @@ def load_single_trace(data_dir = TRACE_NAME):
 
 	return time_trace, throughput_trace
 
-def new_load_single_trace(data_dir = TRACE_NAME):
+def new_load_single_trace(data_dir):
 	file_path = data_dir
 	time_trace = []
 	throughput_trace = []

@@ -1,3 +1,4 @@
+# This one is modified based on time based bin
 import os
 import logging
 import numpy as np
@@ -32,7 +33,6 @@ USER_START_UP_TH = 2000.0
 TARGET_LATENCY = SERVER_START_UP_TH + 0.5 * SEG_DURATION
 USER_FREEZING_TOL = 3000.0							# Single time freezing time upper bound
 USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL			# Accumulate latency upperbound
-
 
 DEFAULT_ACTION = 0			# lowest bitrate
 TYPE = 2
@@ -246,17 +246,17 @@ def main():
 					# print(log_bit_rate, log_last_bit_rate)
 					if TYPE == 1:
 						reward = ACTION_REWARD * log_bit_rate * chunk_number \
-								- REBUF_PENALTY * freezing / MS_IN_S \
-								- SMOOTH_PENALTY * np.abs(log_bit_rate - log_last_bit_rate) \
-								- LONG_DELAY_PENALTY*(LONG_DELAY_PENALTY_BASE**(ReLU(temp_latency-TARGET_LATENCY)/ MS_IN_S)-1) * chunk_number \
-								- MISSING_PENALTY * missing_count
-								# - UNNORMAL_PLAYING_PENALTY*(playing_speed-NORMAL_PLAYING)*download_duration/MS_IN_S
+							- REBUF_PENALTY * freezing / MS_IN_S \
+							- SMOOTH_PENALTY * np.abs(log_bit_rate - log_last_bit_rate) \
+							- LONG_DELAY_PENALTY*(LONG_DELAY_PENALTY_BASE**(ReLU(temp_latency-TARGET_LATENCY)/ MS_IN_S)-1) * chunk_number \
+							- MISSING_PENALTY * missing_count
+							# - UNNORMAL_PLAYING_PENALTY*(playing_speed-NORMAL_PLAYING)*download_duration/MS_IN_S
 					else:
 						reward = ACTION_REWARD * log_bit_rate * chunk_number \
-									- REBUF_PENALTY * freezing / MS_IN_S \
-									- SMOOTH_PENALTY * np.abs(log_bit_rate - log_last_bit_rate) \
-									- LONG_DELAY_PENALTY * lat_penalty(temp_latency/ MS_IN_S) * chunk_number \
-									- MISSING_PENALTY * missing_count
+							- REBUF_PENALTY * freezing / MS_IN_S \
+							- SMOOTH_PENALTY * np.abs(log_bit_rate - log_last_bit_rate) \
+							- LONG_DELAY_PENALTY * lat_penalty(temp_latency/ MS_IN_S) * chunk_number \
+							- MISSING_PENALTY * missing_count
 					# print(reward)
 					action_reward += reward
 					temp_last_bit_rate = bit_rate
