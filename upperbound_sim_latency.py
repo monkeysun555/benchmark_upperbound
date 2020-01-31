@@ -173,6 +173,7 @@ def main():
 			for bit_rate in range(len(BITRATE)):
 				action_reward = element[0]
 				seq = element[1]
+				print("seq is: ", seq)
 				state = element[2]
 				buffer_shift = element[3]
 				latency_shift = element[4]
