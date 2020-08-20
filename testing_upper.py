@@ -27,7 +27,7 @@ CHUNK_IN_SEG = SEG_DURATION/CHUNK_DURATION
 CHUNK_SEG_RATIO = CHUNK_DURATION/SEG_DURATION
 
 # Initial buffer length on server side
-SERVER_START_UP_TH = 2000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
+SERVER_START_UP_TH = 4000.0				# <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
 BUFFER_LENGTHS = [2000.0, 3000.0, 4000.0]
 # how user will start playing video (user buffer)
 USER_START_UP_TH = 2000.0
@@ -101,7 +101,7 @@ RATIO_HIGH_5 = 1.0			# This is the highest ratio between first chunk and the sum
 # TRACE_NAME = '70ms_loss0.5_m5.txt'
 if NEW:
 	DATA_DIR = '../new_traces/test_sim_traces/'
-	TRACE_NAME = 'norway_bus_6'
+	TRACE_NAME = 'norway_bus_20'
 else:
 	DATA_DIR = '../bw_traces_test/cooked_test_traces/'
 	# TRACE_NAME = '85+-29ms_loss0.5_0_2.txt'
@@ -116,7 +116,7 @@ if IF_SUBOPTI:
 else:
 	if NEW:
 		# OPT_RESULT = './results/total_reward_and_seq_latency_'+ str(SERVER_START_UP_TH/MS_IN_S)+'.txt'
-		OPT_RESULT = './results/papernorway_bus_6_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_2.txt'
+		OPT_RESULT = './results/paper_norway_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_2.txt'
 	else:
 		OPT_RESULT = './results/paper70+-24ms_loss1_2_1.txt_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_2.txt'
 	SUMMARY_DIR = './test_results'
@@ -437,13 +437,13 @@ def main():
 	print(initial_delay)
 	if IF_SUBOPTI:
 		if NEW:
-			log_path = LOG_FILE + '_bus_6_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP) + '.txt'
+			log_path = LOG_FILE + '_bus_20_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP) + '.txt'
 		else:
 			log_path = LOG_FILE + '+-70ms_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '_step_' + str(LH_STEP) + '.txt'
 	else:
 		if NEW:
-			log_path = LOG_FILE + '_bus_6_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt'
-			paper_log = LOG_FILE + '_bus_6_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt'
+			log_path = LOG_FILE + '_bus_20_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt'
+			paper_log = LOG_FILE + '_bus_20_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt'
 		else:
 			log_path = LOG_FILE + '+-70_buff' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE) + '.txt'
 			# paper_log = LOG_FILE + '_paper+-_' + str(SERVER_START_UP_TH/MS_IN_S) + '_type_' + str(TYPE)
@@ -627,7 +627,7 @@ def main():
 	log_file.write('\n')
 	log_file.close()
 
-	all_testing_log.write('norway_bus_6' + '\t')
+	all_testing_log.write('norway_bus_20' + '\t')
 	all_testing_log.write(str(np.sum(r_batch)) + '\t')
 	all_testing_log.write(str(np.mean(a_batch)) + '\t')
 	all_testing_log.write(str(np.sum(f_batch)) + '\t')

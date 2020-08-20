@@ -4,12 +4,15 @@ import numpy as np
 DATA_DIR = '../bw_traces/'
 TRACE_NAME = '../bw_traces/BKLYN_1.txt'
 
-def loadBandwidth(data_dir = DATA_DIR):
+def loadBandwidth(data_dir=DATA_DIR):
+	print(data_dir)
 	datas = os.listdir(data_dir)
 	time_traces = []
 	throughput_traces = []
 	data_names = []
 	for data in datas:
+		if '.DS' in data:
+			continue
 		file_path = data_dir + data
 		time_trace = []
 		throughput_trace = []
