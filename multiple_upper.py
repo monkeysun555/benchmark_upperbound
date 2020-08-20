@@ -36,7 +36,7 @@ USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL			# Accumulate latency
 
 DEFAULT_ACTION = 0			# lowest bitrate
 
-TYPES = [2, 3, 4]
+TYPES = [2, 3]
 BUFFERS = [2000.0, 3000.0, 4000.0]
 N_FILES = 8
 # UNNORMAL_PLAYING_PENALTY = 1.0 * CHUNK_FRAG_RATIO
@@ -142,7 +142,7 @@ def find_upper(file_num, server_start_up, curr_dir, temp_type):
 	for seg_idx in range(TEST_DURATION):
 		# Here generate several values shared by same 
 		if seg_idx%10 == 0:
-			print "Current seg_idx is:", seg_idx, 'in type:', temp_type, 'buffer len:', server_start_up, 'process(#file):', file_num 
+			print("Current seg_idx is:", seg_idx, 'in type:', temp_type, 'buffer len:', server_start_up, 'process(#file):', file_num)
 		if CHUNK_IN_SEG == 5:
 			ratio = np.random.uniform(RATIO_LOW_5, RATIO_HIGH_5)
 		else:
@@ -170,11 +170,11 @@ def find_upper(file_num, server_start_up, curr_dir, temp_type):
 				temp_last_bit_rate = last_bit_rate
 				# print "bit rate: " + str(bit_rate)
 				if not np.round(playing_time, 4) == np.round(seg_idx * SEG_DURATION - buffer_length - buffer_shift, 4):
-					print "Not equal"
-					print np.round(playing_time, 4)
-					print seg_idx * SEG_DURATION
-					print np.round(buffer_length, 4)
-					print np.round(buffer_shift, 4)
+					print("Not equal")
+					print(np.round(playing_time, 4))
+					print(seg_idx * SEG_DURATION)
+					print(np.round(buffer_length, 4))
+					print(np.round(buffer_shift, 4))
 				server_timing = playing_time + latency + latency_shift
 				player_timing = server_timing - initial_delay
 				# print "playing time: ", playing_time
@@ -289,7 +289,7 @@ def find_upper(file_num, server_start_up, curr_dir, temp_type):
 							# print "Current playing time: ", temp_playing_time
 							# print "after quantize: ", action_reward, player.get_playing_time(), int(np.round(player.get_real_time()/MS_IN_S/TIMING_BIN)), int(np.round(temp_buffer_length/MS_IN_S/BUFFER_BIN)) 
 							if round_buffer_length > temp_buffer_max/BUFFER_BIN or round_latency > temp_latency_max/LATENCY_BIN:
-								print "Exceed limit, discard!"
+								print("Exceed limit, discard!")
 								break
 							temp_seq = seq[:]
 							temp_seq.append(bit_rate)
@@ -322,8 +322,8 @@ def find_upper(file_num, server_start_up, curr_dir, temp_type):
 		if r_table_pre[value[0]][value[1]][value[2]][0] > max_reward:
 			max_reward = r_table_pre[value[0]][value[1]][value[2]][0]
 			max_seq = r_table_pre[value[0]][value[1]][value[2]][1]
-	print "Max reward is: ", max_reward
-	print "Max sequence is: ", max_seq
+	print("Max reward is: ", max_reward)
+	print("Max sequence is: ", max_seq)
 	np.savetxt(curr_dir + 'buffer_' + str(server_start_up/MS_IN_S) + '_file_' + str(file_num) + '.txt', max_seq, fmt='%1.2f')
 
 
