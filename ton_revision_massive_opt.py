@@ -36,7 +36,6 @@ USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL           # Accumulate
 
 DEFAULT_ACTION = 0          # lowest bitrate
 
-TYPES = [2, 3, 4]
 BUFFERS = [2000.0, 3000.0, 4000.0]
 N_FILES = 8
 # UNNORMAL_PLAYING_PENALTY = 1.0 * CHUNK_FRAG_RATIO
@@ -343,7 +342,7 @@ def main():
     return_dict = manager.dict()
 
     ## CHANGE HERE## TON REVISION
-    buffer_len = 2      # 2 AND 3
+    buffer_len = 3     # 2 AND 3
     # For each t/bf combination, run 10 processes of different network env
     processes = []
     for i in range(num_process):
@@ -362,7 +361,7 @@ def main():
 
 
     # Check content in return_dict
-    actions_file = SUMMARY_DIR + '/actions.txt'
+    actions_file = SUMMARY_DIR + '/actions_buffer_' + str(buffer_len) + '.txt'
 
     with open(actions_file, 'w') as f:
         for k, v in return_dict.items():
