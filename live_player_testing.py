@@ -67,7 +67,7 @@ class Live_Player(object):
 		downloading_fraction = 0.0	# in ms
 		freezing_fraction = 0.0	# in ms
 		time_out = 0
-		# rtt = 0.0
+		rtt = 0.0
 		# Handle RTT 
 		if take_action:
 			# rtt = np.random.uniform(RTT_LOW, RTT_HIGH) 	# in ms
@@ -76,6 +76,7 @@ class Live_Player(object):
 			if duration > rtt:
 				self.last_trace_time += rtt
 			else:
+
 				temp_rtt = rtt
 				while duration < temp_rtt:
 					self.last_trace_time = self.time_trace[self.time_idx] * MS_IN_S
@@ -86,7 +87,7 @@ class Live_Player(object):
 					temp_rtt -= duration
 					duration = self.time_trace[self.time_idx] * MS_IN_S - self.last_trace_time
 				self.last_trace_time += temp_rtt
-				
+
 				# temp_rtt = rtt - duration
 				# self.last_trace_time = self.time_trace[self.time_idx] * MS_IN_S	# in ms
 				# self.time_idx += 1
@@ -128,7 +129,7 @@ class Live_Player(object):
 						self.state = 0
 						self.buffer = 0.0
 						assert chunk_sent < chunk_size
-						return chunk_sent, downloading_fraction, freezing_fraction, time_out, start_state
+						return chunk_sent, downloading_fraction, freezing_fraction, time_out, start_state, rtt
 
 					downloading_fraction += fraction
 					self.last_trace_time += fraction
@@ -153,7 +154,7 @@ class Live_Player(object):
 						freezing_fraction = self.freezing_tol
 						self.state = 0
 						assert chunk_sent < chunk_size
-						return chunk_sent, downloading_fraction, freezing_fraction, time_out, start_state
+						return chunk_sent, downloading_fraction, freezing_fraction, time_out, start_state, rtt
 					freezing_fraction += fraction
 					self.last_trace_time += fraction
 					downloading_fraction += fraction
@@ -207,7 +208,7 @@ class Live_Player(object):
 					self.state = 0
 					chunk_sent += (self.freezing_tol + self.buffer/playing_speed) * throughput * PACKET_PAYLOAD_PORTION	# in Kbits
 					assert chunk_sent < chunk_size
-					return chunk_sent, downloading_fraction, freezing_fraction, time_out, start_state
+					return chunk_sent, downloading_fraction, freezing_fraction, time_out, start_state, rtt
 
 				chunk_sent += duration * throughput * PACKET_PAYLOAD_PORTION	# in Kbits
 				downloading_fraction += duration 	# in ms
@@ -236,7 +237,7 @@ class Live_Player(object):
 					freezing_fraction = self.freezing_tol
 					# Download is not finished, chunk_size is not the entire chunk
 					assert chunk_sent < chunk_size
-					return chunk_sent, downloading_fraction, freezing_fraction, time_out, start_state
+					return chunk_sent, downloading_fraction, freezing_fraction, time_out, start_state, rtt
 
 				freezing_fraction += duration 	# in ms
 				chunk_sent += duration * throughput * PACKET_PAYLOAD_PORTION	# in kbits
@@ -285,7 +286,7 @@ class Live_Player(object):
 		# 			self.time_idx = 1
 		# 			self.last_trace_time = 0.0
 		# 	assert self.state == 1
-		return chunk_size, downloading_fraction, freezing_fraction, time_out, start_state
+		return chunk_size, downloading_fraction, freezing_fraction, time_out, start_state, rtt
 
 	def sync_playing(self, sync_time):
 		self.buffer = 0
@@ -376,3 +377,4 @@ class Live_Player(object):
 
 	def get_time_trace(self):
 		return self.time_trace
+

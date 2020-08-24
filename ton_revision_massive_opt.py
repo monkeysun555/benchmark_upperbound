@@ -33,7 +33,6 @@ TARGET_LATENCY = SERVER_START_UP_TH + 0.5 * SEG_DURATION
 USER_FREEZING_TOL = 3000.0                          # Single time freezing time upper bound
 USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL           # Accumulate latency upperbound
 
-
 DEFAULT_ACTION = 0          # lowest bitrate
 
 BUFFERS = [2000.0, 3000.0, 4000.0]
@@ -52,6 +51,16 @@ RATIO_LOW_2 = 2.0               # This is the lowest ratio between first chunk a
 RATIO_HIGH_2 = 10.0             # This is the highest ratio between first chunk and the sum of all others
 RATIO_LOW_5 = 0.75              # This is the lowest ratio between first chunk and the sum of all others
 RATIO_HIGH_5 = 1.0              # This is the highest ratio between first chunk and the sum of all others
+
+ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO   
+REBUF_PENALTY = 6.0     # for second
+SMOOTH_PENALTY = 1.0
+# LONG_DELAY_PENALTY_BASE = 1.2 # for second
+LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
+CONST = 6.0
+X_RATIO = 1.0
+MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO         # not included
+
 
 IF_NEW = 0          ## 4F, DONT CHANGE
 # bitrate number is 6, no bin
@@ -79,20 +88,11 @@ SUMMARY_DIR = './massive_opt/'
 def ReLU(x):
     return x * (x > 0)
 
-def lat_penalty(x, const, x_ratio):
-    return 1.0/(1+math.exp(const-x_ratio*x)) - 1.0/(1+math.exp(const))
+def lat_penalty(x):
+    return 1.0/(1+math.exp(CONST-X_RATIO*x)) - 1.0/(1+math.exp(CONST))
 
 def find_upper(file_num, server_start_up, trace_times, trace_bws, trace_names, return_dict):
-
-    ACTION_REWARD = 1.0 * CHUNK_SEG_RATIO   
-    REBUF_PENALTY = 6.0     # for second
-    SMOOTH_PENALTY = 1.0
-    # LONG_DELAY_PENALTY_BASE = 1.2 # for second
-    LONG_DELAY_PENALTY = 4.0 * CHUNK_SEG_RATIO 
-    CONST = 6.0
-    X_RATIO = 1.0
-    MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO         # not included
-
+    np.random.seed(RANDOM_SEED)
     # Init the global variable value
     # file_name = fns.find_file(file_num)
     # temp_trace = DATA_DIR + file_name
@@ -226,7 +226,7 @@ def find_upper(file_num, server_start_up, trace_times, trace_bws, trace_names, r
                         reward = ACTION_REWARD * log_bit_rate * chunk_number \
                                     - REBUF_PENALTY * freezing / MS_IN_S \
                                     - SMOOTH_PENALTY * np.abs(log_bit_rate - log_last_bit_rate) \
-                                    - LONG_DELAY_PENALTY * lat_penalty(temp_latency/ MS_IN_S, CONST, X_RATIO) * chunk_number \
+                                    - LONG_DELAY_PENALTY * lat_penalty(temp_latency/ MS_IN_S) * chunk_number \
                                     - MISSING_PENALTY * missing_count
                         # print(reward)
                         action_reward += reward
@@ -311,7 +311,7 @@ def find_upper(file_num, server_start_up, trace_times, trace_bws, trace_names, r
 
 
 def main():
-    np.random.seed(RANDOM_SEED)
+    # np.random.seed(RANDOM_SEED)
     # create result directory
     if not os.path.exists(SUMMARY_DIR):
         os.makedirs(SUMMARY_DIR)
