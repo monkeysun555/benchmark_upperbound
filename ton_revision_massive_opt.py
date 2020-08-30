@@ -62,7 +62,7 @@ X_RATIO = 1.0
 MISSING_PENALTY = 6.0 * CHUNK_SEG_RATIO         # not included
 
 
-IF_NEW = 0          ## 4F, DONT CHANGE
+IF_NEW = 0          ## 4G, DONT CHANGE
 # bitrate number is 6, no bin
 if IF_NEW:
     # 3G
