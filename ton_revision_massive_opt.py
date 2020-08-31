@@ -25,7 +25,7 @@ CHUNK_IN_SEG = SEG_DURATION/CHUNK_DURATION
 CHUNK_SEG_RATIO = CHUNK_DURATION/SEG_DURATION
 
 # Initial buffer length on server side
-SERVER_START_UP_TH = 2000.0             # <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
+SERVER_START_UP_TH = 4000.0             # <========= TO BE MODIFIED. TEST WITH DIFFERENT VALUES
 # how user will start playing video (user buffer)
 USER_START_UP_TH = 2000.0
 # set a target latency, then use fast playing to compensate
@@ -35,8 +35,6 @@ USER_LATENCY_TOL = SERVER_START_UP_TH + USER_FREEZING_TOL           # Accumulate
 
 DEFAULT_ACTION = 0          # lowest bitrate
 
-BUFFERS = [2000.0, 3000.0, 4000.0]
-N_FILES = 8
 # UNNORMAL_PLAYING_PENALTY = 1.0 * CHUNK_FRAG_RATIO
 # FAST_PLAYING = 1.1        # For 1
 # NORMAL_PLAYING = 1.0  # For 0
@@ -342,7 +340,7 @@ def main():
     return_dict = manager.dict()
 
     ## CHANGE HERE## TON REVISION
-    buffer_len = 3     # 2 AND 3
+    buffer_len = int(SERVER_START_UP_TH/MS_IN_S)     # 2 AND 3 or 4
     # For each t/bf combination, run 10 processes of different network env
     processes = []
     for i in range(num_process):
